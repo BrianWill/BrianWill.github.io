@@ -58,7 +58,7 @@
 
 ## programming language videos
 
-### [the Go language](https://www.youtube.com/playlist?list=PLIbUZ3URbL0Hn-2v6oB9nMfIfJPYDY9Nv) (unlike prior coverage of Go, assumes prior programming knowledge)
+### [the Go language](https://www.youtube.com/playlist?list=PLIbUZ3URbL0Hn-2v6oB9nMfIfJPYDY9Nv) (unlike the intro programming with Go series, this assumes prior programming knowledge)
 
 ### [the Clojure language](https://www.youtube.com/playlist?list=PLAC43CFB134E85266)
 
@@ -70,7 +70,7 @@
 
 ### [the Python language](https://www.youtube.com/playlist?list=PL29B31797A997C41E)
 
-## programming articles
+## programming posts
 
 ### [C# generics](https://gist.github.com/BrianWill/42007fe44310bd4102a54e921ec01b00)
 ### [rules of tech writing](https://gist.github.com/BrianWill/713b679e212063cc6e56aad8e6303ccb)
