@@ -1,12 +1,26 @@
-## directory of Brian Will's programming videos and various projects
+# directory of my programming videos and misc projects
 
 ## 3D and game programming videos
 
 ### [OpenGL](https://www.youtube.com/playlist?list=PLIbUZ3URbL0ESKHrvzXuHjrcLi7gxhBby) (work in progress)
 
-### [the Unity game engine](https://www.youtube.com/playlist?list=PLIbUZ3URbL0F8p5TUxBChxqpqEJY8yRJo)
+### [intro to C# and the Unity game engine](https://www.youtube.com/playlist?list=PLIbUZ3URbL0F8p5TUxBChxqpqEJY8yRJo)
+
+### [Unity ECS and Job system](https://github.com/BrianWill/LearnUnity/blob/master/ecs-jobs/intro.md)
+
+## arguments against Object-Oriented Programming
+
+### [Object-Oriented Programming is Bad](https://www.youtube.com/watch?v=QM1iUe6IofM) 
+
+### [part 2: 4 short examples](https://www.youtube.com/watch?v=IRTfhkiAqPw)
+
+### [part 3: 3800 SLOC example](https://www.youtube.com/watch?v=V6VP-2aIcSc)
+
+### [Object-Oriented Programming is Good*](https://www.youtube.com/watch?v=0iyB0_qPvWk)
 
 ## intro to programming videos
+
+### [every programming language in 15 minutes](https://youtu.be/duhDovqHbEs)
 
 ### [intro to programming with Go](https://www.youtube.com/playlist?list=PLIbUZ3URbL0GcLBpWebtEXO5kT2_vHfBW)
 
@@ -24,11 +38,15 @@
 
 ### [Unix terminals and shells](https://www.youtube.com/playlist?list=PLFAC320731F539902)
 
+### [Object-Oriented Programming concepts](https://www.youtube.com/watch?v=lbXsrHGhBAU)
+
 ### [the Internet](https://www.youtube.com/playlist?list=PL18AF3812A53E11C5)
 
 ### [HTML and CSS](https://www.youtube.com/playlist?list=PLA81DCBC4D8A85E68)
 
 ### [server-side web programming](https://www.youtube.com/playlist?list=PL978B2CE2D788F745)
+
+### [Go web app starter guide](https://www.youtube.com/watch?v=uey7jIEmR3A) and [GopherJS (Go compiled to Javascript)](https://youtu.be/HObqhDgMdgk)
 
 ### [relational databases](https://www.youtube.com/playlist?list=PL6D2AA443FA10BBBC)
 
@@ -40,9 +58,7 @@
 
 ## programming language videos
 
-### [the Go language](https://www.youtube.com/playlist?list=PLIbUZ3URbL0Hn-2v6oB9nMfIfJPYDY9Nv)
-
-Unlike prior coverage of Go, assumes prior programming knowledge.
+### [the Go language](https://www.youtube.com/playlist?list=PLIbUZ3URbL0Hn-2v6oB9nMfIfJPYDY9Nv) (unlike prior coverage of Go, assumes prior programming knowledge)
 
 ### [the Clojure language](https://www.youtube.com/playlist?list=PLAC43CFB134E85266)
 
@@ -61,3 +77,7 @@ Unlike prior coverage of Go, assumes prior programming knowledge.
 ### [asynchronous Javascript](https://gist.github.com/BrianWill/d7e02cdeb8d9c43152750c52887418ff)
 ### [the reader and evaluator: how Clojure code becomes a running program](https://gist.github.com/BrianWill/35d4b948c5b6149f5898)
 ### [writing functionally pure code](https://gist.github.com/BrianWill/e122e4cffa000d30f187)
+
+## game projects
+
+### [Chrss (github)](https://github.com/BrianWill/chrss), [video dev diary #1](https://youtu.be/gyHuZPnEGRI)
