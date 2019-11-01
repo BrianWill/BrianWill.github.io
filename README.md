@@ -6,7 +6,9 @@
 
 ### [intro to C# and the Unity game engine](https://www.youtube.com/playlist?list=PLIbUZ3URbL0F8p5TUxBChxqpqEJY8yRJo)
 
-### [Unity ECS and Job system](https://github.com/BrianWill/LearnUnity/blob/master/ecs-jobs/intro.md)
+### [Unity Job System](https://www.youtube.com/watch?v=vSxcZVfJn74), [Unity ECS (part 1)](https://www.youtube.com/watch?v=OqzUr-Rg6w4), [Unity ECS (part 2)](https://www.youtube.com/watch?v=3r4aFWqXY_8)
+
+### [Unity ECS and Job system](https://github.com/BrianWill/LearnUnity/blob/master/ecs-jobs/intro.md) (out of date)
 
 ## arguments against Object-Oriented Programming
 
