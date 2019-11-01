@@ -8,8 +8,6 @@
 
 ### [Unity Job System](https://www.youtube.com/watch?v=vSxcZVfJn74), [Unity ECS (part 1)](https://www.youtube.com/watch?v=OqzUr-Rg6w4), [Unity ECS (part 2)](https://www.youtube.com/watch?v=3r4aFWqXY_8)
 
-### [Unity ECS and Job system](https://github.com/BrianWill/LearnUnity/blob/master/ecs-jobs/intro.md) (out of date)
-
 ## arguments against Object-Oriented Programming
 
 ### [Object-Oriented Programming is Bad](https://www.youtube.com/watch?v=QM1iUe6IofM) 
@@ -83,3 +81,8 @@
 ## game projects
 
 ### [Chrss (github)](https://github.com/BrianWill/chrss), [video dev diary #1](https://youtu.be/gyHuZPnEGRI)
+
+
+### deprecated
+
+### [Unity ECS and Job system](https://github.com/BrianWill/LearnUnity/blob/master/ecs-jobs/intro.md) (out of date text and videos)
