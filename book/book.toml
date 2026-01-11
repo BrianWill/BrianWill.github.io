@@ -2,3 +2,7 @@
 title = "Brian Will's notes"
 authors = ["BrianWill"]
 language = "en"
+
+
+[output.html]
+preferred-dark-theme = "coal"
