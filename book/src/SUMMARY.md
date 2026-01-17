@@ -14,7 +14,8 @@
 # Programming Languages
 
 - [Programming Languages](./programming_languages.md)
-- [Odin Language - Data Types](./odin_data_types.md)
+- [Data Types in Odin](./odin_data_types.md)
+- [Polymorphism in Odin](./odin_polymorphism.md)
 
 ---
 
