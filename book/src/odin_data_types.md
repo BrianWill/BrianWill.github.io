@@ -1,12 +1,13 @@
 # Data Types in Odin
 
-This text accompanies a series of videos that cover data types in the Odin programming language as an entry point to the language:
+This text is the supplementary notes for a series of videos that introduces the data types in the Odin programming language:
 
 - [Data types in Odin: numbers, booleans, strings, pointers]()
 - [Data types in Odin: arrays, slices, maps, structs]()
 - [Data types in Odin: unions, error values]()
 
-We assume the audience already has some familiarity with C or other languages with pointers (e.g. C++, Rust, Zig, Go).
+> [!WARNING]
+> The videos (and text) assume no prior knowledge of Odin itself, but they assume the audience already has some familiarity with C (or other languages with pointers, such as C++, Rust, Zig, or Go). Also be clear that these notes are not intended to be sequentially read on their own without having first watched the videos.
 
 This topic is followed by another video and text: [Polymorphism in Odin](odin_polymorphism.md)
 
@@ -283,199 +284,503 @@ arr: [5]bool
 
 ## Slices
 
-What Odin calls a slice is a value that represents a subrange of an array (or alternatively, an array-like buffer that stores contiguous, homogeneous values). Concretely, a slice contains a pointer to the start of the subrange, and then an integer for the length of the subrange.
+A *slice* in Odin is a value that represents a subrange of an array (or alternatively, an array-like buffer that stores contiguous, homogeneous values). Concretely, a slice contains a pointer to the start of the subrange plus an integer for the length of the subrange.
 
-For anyone coming from Go, it’s important to note that unlike Go slices, Odin slices do not contain a capacity, and there is no append operation for slices. For that in Odin, you instead want what Odin calls a dynamic array, which we’ll cover later in this video.
+> [!WARNING]
+> For Go programmers, it’s important to note that, unlike Go slices, Odin slices do not contain a capacity, and there is no append operation for slices. Odin's closest equivalent of a Go slice is called a [dynamic array]().
 
-Anyway, here we’re declaring the variable s to be a slice of ints, as indicated by the empty square brackets. If we have an array of ints, we can use the slice operator to produce a slice of ints value. The slice operator looks like the index operator, but with a colon surrounded by two integers representing the start and end of the returned slice’s subrange. In this example, we’re getting a slice representing the subrange of the array that starts at index 30 and ends at index 40 (not inclusive), so the slice value will store a pointer to index 30 and a length 10.
+```go
+s: []int                 // declare 's' to be a slice of ints
 
-If we then assign a value to index 0 of the slice, this is logically the same as assigning to index 30 of the array.
+arr: [100]int       
+s = arr[30:40]           // from the array, get a slice starting at index 30 and ending at index 40
 
-As a convenience, the first integer of a slice operation can be omitted, in which case it defaults to 0, so here the slice now runs from index 0 of the array up to (but not including) index 40 and has a length of 40.
+assert(10 == len(s))     // length of the slice is 10
 
-The second integer expression in the slice operator can also be omitted, in which case it defaults to the length of the array, so here the slice now runs from index 20 of the array up to (but not including) index 100 and has a length of 80.
+// because index 0 of this slice is the same as index 30 of the array,
+// these two assignments assign to the same location in memory
+s[0] = -99               
+arr[30] = -99            
+```
 
-Commonly we want to get a slice with a certain length, so often we’ll compute the end index as the starting offset plus the desired length. Here for example we want a slice that starts at index 5 and has a length of 9, so the end index is computed as offset + length.
-
-A nice idiom that lets us express this a little more elegantly is to actually do two slice operations: first we get a slice running from the desired offset to the end of the array, then we get a slice of the slice, starting from its first index up to our desired length. The end result is the same and the compiled code is probably the same, but this way we can write the offset expression just once instead of twice.
+As a convenience, the first integer of a slice operation can be omitted, in which case it defaults to 0, and the second integer can also be omitted, in which case it defaults to the length of the array.
 
 
 ## Allocations
 
-Before completing our discussion of slices and before introducing dynamic arrays, we need to  talk a bit about allocators in Odin. This is a larger topic than we can cover here, but we’ll hit the key ideas.
- 
-Because Odin is not a garbage collected language, you, the programmer, are responsible for allocating and deallocating any heap memory you want to use.
+Because Odin is not a garbage collected language, the programmer is responsible for allocating and deallocating any heap memory they want to use. 
+For example, if we want to create a slice whose referenced data resides on the heap, we can call the `make_slice` function (from the base library), which returns a slice that references newly allocated heap memory. When we’re done with a heap-allocated slice, we should call `delete_slice` (from the base library) to deallocate the slice’s heap memory: 
 
-For example, if we want to create a slice whose referenced data resides on the heap, we can call the make_slice function from the base library, which returns a slice that references newly allocated heap memory, and then when we’re done with the slice, we should call delete_slice from the base library to deallocate the slice’s heap memory. Whereas before we were creating slices that referenced the memory of stack-allocated arrays, here the slice references heap allocated memory with no array involved. (And be clear that the slice variable itself is still stack allocated.)
+```go
+s: []int              
 
-The hidden detail here is that make_slice, delete_slice, and all other Odin functions that allocate and deallocate let you specify an allocator. Different allocators can track their allocations in different ways, and some allocators may perform better than others in different use cases. In our example, we didn’t specify the allocator, so both functions default to Odin’s default allocator. This allocator is normally accessible as context.allocator, so here we get the same result by passing context.allocator explicitly.
+// returns a slice with newly allocated buffer of 10 ints
+s = make_slice([]int, 10)
 
-The other allocator that’s most commonly used is normally accessible as context.temp_allocator. This temp allocator does not track each allocation individually: instead it just tracks how much of its allotted space has been used, such that its allocations can only be freed all together instead of individually.
+// deallocates the allocated buffer referenced by the slice
+delete_slice(s)
+```
 
-Here if we use the temp allocator, attempting to deallocate the slice individually will trigger a segmentation fault. Instead what we should do is eventually call free_all to deallocate all the allocations at once. This effectively resets the temp allocator, making all of its memory available again for subsequent allocations.
+> [!NOTE]
+> The Odin base library also has functions `make` and `delete`. These [proc group]() functions are the generally preferred shorthand for invoking all variants of the `make_X` / `delete_X` functions.
 
-In practice, temp allocations are useful in situations where you know that a group of allocations can all be safely freed at the same time. For example, video games typically allocate many objects in a frame that can be neatly deallocated all at once at the end of the frame. For these allocations, the game can use the temp allocator, but for things that need to live longer than an individual frame, the game may need to use an allocator that individually tracks allocations, such as Odin’s default allocator.
+Whereas before we were creating slices that referenced the memory of stack-allocated arrays, here the slice references heap allocated memory with no array involved. (And be clear that the slice variable itself is still stack allocated.)
 
+The `make_slice` function, the `delete_slice` function, and all other allocating or deallcating functions let you pass an allocator. Different allocators can track their allocations in different ways, and some allocators may perform better than others in different use cases. 
+
+When no allocator is explicitly passed to these functions, they implicitly use the allocator provided by the [context](). The code below is functionally the same as the code above:
+
+```go
+s: []int              
+
+// explicitly pass the context allocator
+s = make_slice([]int, 10, context.allocator)
+
+// explicitly pass the context allocator
+delete_slice(s, context.allocator)
+```
+
+See more about [the context and allocations in Odin]().
 
 ## Dynamic Arrays
 
-Now that we have some understanding of allocators, we can talk about dynamic arrays.
+Whereas a normal Odin array is fixed in size, a dynamic array has no fixed size and so can grow and shrink. Concretely, a dynamic array value resembles a slice in that it consists of a pointer and a length, but in addition, a dynamic array also has an integer representing its capacity and a reference to an allocator:
 
-Whereas a normal Odin array is fixed in size, a dynamic array has no fixed size and so can grow and shrink. 
+```go
+// the reserved word 'dynamic' makes this a dynamic array
+arr: [dynamic]int     
 
-Here we’re declaring a variable arr which is a dynamic array of ints, as denoted by the reserved work dynamic inside the square brackets.
+// returns a dynamic array with a newly allocated buffer of 7 ints,
+// a logical length of 4, and a reference to the context allocator
+arr = make_dynamic_array_len_cap([dynamic]int, 4, 7)
 
-Concretely a dynamic array value resembles a slice in that it consists of a pointer and a length, but in addition a dynamic array has an integer representing its capacity and a reference to an allocator.
+assert(4 == len(arr))                
+assert(7 == cap(arr))
+assert(context.allocator == arr.allocator)                
 
-This capacity and allocator allows a dynamic array to behave more like what Go calls a slice, in that we’re able to append values to a dynamic array.
+delete_dynamic_array(arr)       // deallocate from the referenced allocator
+```
 
-Whereas slices often reference subranges of stack allocated arrays, that is not an intended use case for dynamic arrays. Instead, the data referenced by a dynamic array is normally heap allocated via base library functions, such as here where this call allocates a block of 7 ints and returns a dynamic array pointing to this block, with a length of 4, capacity of 7, and a reference to the default allocator. When we’re done with this dynamic array, we should call delete_dynamic_array, which uses the referenced allocator to know which allocator to deallocate the block from.
+> [!NOTE]
+> Whereas slices often reference subranges of stack-allocated arrays, that is not an intended use case for dynamic arrays. Instead, the data referenced by a dynamic array is normally heap-allocated *via* base library functions.
 
-As a sidenote, the fact that slice values do not include an allocator reference can create a bit of hassle because you must separately track the allocators used for each of your allocated slices. In contrast, dynamic arrays conveniently reference their allocator, and this in fact is generally the recommended pattern for any data types that require allocations.
+By virtue of storing a capacity integer and allocator reference, a dynamic array allows us to append values with the `apppend_elems` function:
 
-Now as promised, we can append to a dynamic array, as here where we use the base library function append_elems to append three values. The function requires a pointer to the dynamic array so that it may update its length and potentially also its pointer and capacity. In this case, the block referenced by the dynamic array already had sufficient capacity for three more values, so the pointer and capacity remain the same.
+```go
+arr: [dynamic]int
+            
+arr = make_dynamic_array_len_cap([dynamic]int, 4, 7)
 
-But if a call to append exceeds the capacity, then a new larger block is allocated, the data is copied, and the original block is freed before the values are appended, and the pointer and capacity are updated to match the new allocation. Here, the second append exceeds the capacity, so a new allocation is made with a capacity that is at least large enough to accommodate the appended values.
+// this append stays within the existing capacity
+append_elems(&arr, 100, 101, 102)
+assert(7 == len(arr))
+assert(7 == cap(arr))                
 
+// this append exceeds the capacity, so:
+// 1. a new, larger buffer is allocated
+// 2. the existing values are copied into this new buffer
+// 3. the new elements are added to the new buffer
+// 4. the original buffer is deallocated
+append_elems(&arr, 123, 456)   
+assert(9 == len(arr))                
+assert(9 <= cap(arr))
+```
+
+> [!NOTE]
+> The Odin base library also has an `append` [proc group]() function, which is generally preferred shorthand for invoking all variants of the `append_X` functions.
 
 ## Maps
 
+*Maps* are hashmaps of key-value pairs. Concretely a map value consists of a pointer to a block of memory where the key-value pairs reside, an integer indicating the number of key-value pairs, and a reference to an allocator.
 
-One more type of collection built into Odin are maps, which are hashmaps of key-value pairs. Concretely a map value consists of a pointer to a block of memory where the key-value pairs reside, an integer indicating the number of key-value pairs, and a reference to an allocator.
+Before using a map, we must allocate it. Any time new keys are added to the map, the map's memory may be reallocated. Like all allocated things, we generally should eventually deallocate it when we no longer need it.
 
-Here this variable m is declared to be a map of string keys with int values.
+```go
+// declare a variable 'm' which is a map of string keys and int values
+m: map[string]int       
 
-Before using the map, we must allocate it, and like all allocated things, we should eventually deallocate it when we no longer need it.
+m = make_map(map[string]int)    // allocate memory for the map
 
-Once the map is allocated, we can add, set, and read key-value pairs with the index operator. Here we add a key “hi” with the value 5 to our empty map, increasing its length to 1. When we assign to an existing key, we replace its existing value, and the length of the map remains unchanged. To remove a key, we call a base library function, passing a pointer to the map and the key to remove.
+m["hi"] = 5                     // adds new key "hi" with value 5 (may reallocate)
+assert(1 == len(m))
 
-For more things you can do with arrays and maps, there are a number of base library functions which we won’t cover here. I recommend browsing the documentation, starting with this list.
+m["hi"] = 7                     // sets value of the existing key
+
+delete_key(&m, "hi")            // removes the existing key and its value
+assert(0 == len(m))
+
+delete_map(m)                   // deallocate the map when it's no longer needed
+```
 
 
 ## Structs
 
-Like in C and other C-like languages, a struct in Odin is a composite data type that consists of named members called fields. 
+Like in C and other C-like languages, a *struct* in Odin is a composite data type that consists of named members called *fields*. 
 
-Here we’re defining a type named Cat which is a struct consisting of two fields, an int named a and an f32 named b. 
+```go
+// define a type named 'Cat' which is a struct consisting of two fields
+Cat :: struct {
+    a: int,   // field 'a' is an int
+    b: f32,   // field 'b' is an f32
+}
 
-If we declare a Cat variable, we can assign to its individual fields with the dot operator.
+c: Cat        // declare a variable 'c' of type Cat
+c.a = 5       // assign to the 'a' field of 'c'
+c.b = 3.6     // assign to the 'b' field of 'c'
 
-We can also create Cat values with a literal syntax, where each field can be provided a value by name. Any omitted fields default to their zero values, and optionally, the struct name on the literal can be left inferred from the assignment target.
+// assign a Cat literal (where 'b' is 3.6 and 'a' is 5) to 'c'
+c = Cat{b = 3.6, a = 5}
 
-anonymous structs
+// omitted fields default to zero values (so 'a' is 0 and 'b' is 0)
+c = Cat{}                       
 
-Here we’re creating a variable whose type is an unnamed, anonymous struct.
+// the literal type can be inferred from the assignment context
+c = {a = 5, b = 3.6}            
+```
 
-We can explicitly cast to and from any named struct type that has the exact same field names and types.
+### Anonymous structs
 
-Anonymous structs are particularly convenient for fields in other structs. Here this Dog struct has a field named nested that is itself an anonymous struct, and we can then read and write the fields of the nested struct individually or as a complete struct.
+Rather than give every struct type a name, it's sometimes more convenient to use anonymous struct types:
 
-While using a named struct instead wouldn’t change the semantics, the anonymous struct effectively allows us to logically group fields without the hassle of defining a separate named struct type.
+```go
+// declare variable 'anon' with anonymous struct type having two fields
+anon: struct {a: int, b: f32}
 
-# `using` fields of structs
+// assign an anonymous struct literal to 'anon'
+anon = {a = 5, b = 3.6}
 
-Another option with nested struct fields is to mark them with the reserved word using. This doesn’t change the structure of the data at all, but it makes the members of the nested struct directly accessible as if they were fields of the containing struct itself.
+Cat :: struct {
+    a: int,
+    b: f32,
+}
 
-Here for example, we have a Cat struct that contains a Pet struct field marked with using. We can still access a cat’s pet field and its members as normal, but we can also as a stylistic convenience directly access the fields of Pet as if they are directly fields of Cat itself.
+c: Cat
 
-As a further convenience, we can also use a Cat value in any place where the compiler expects a Pet value, and the compiler will understand this as shorthand for the Pet within the Cat.
+// cast an anonymous struct value to Cat
+// (valid because they have the same set of field names and types)
+c = Cat(anon)                            
 
-In this last assignment, for example, we’re not actually assigning the full Cat to the Pet variable–something which is logically impossible–but rather just assigning the Cat’s Pet field to the Pet variable.
+// cast a cat value to the anonymous struct
+anon = struct{a: int, b: f32}(c)         
+```
 
-Similarly, if we call a function that expects a Pet argument, we can seemingly pass a Cat value, but in actuality what is passed at runtime is just the Pet field of the Cat.
+Anonymous structs are particularly convenient for fields in other structs. Here this Dog struct has a field named nested that is itself an anonymous struct, and we can then read and write the fields of the nested struct individually or as a complete struct. 
 
-Finally, a struct field marked with using can be given the special name _, which makes the full Pet field inaccessible by name. We can otherwise still access the Pet members as if they are members of Cat itself, and we can still use Cat values where a Pet is expected.
+```go
+Dog :: struct {
+    x: string,
+    nested: struct {a: int, b: f32},     // anonymous struct field
+}
+
+d: Dog
+
+// we can assign to individual fields of an anonymous struct member...
+d.nested.a = 3
+
+// ... or we can assign a whole anonymouse struct value
+d.nested = struct {a = 5, b = 3.6}
+``` 
+
+The semantics would be exactly the same if we defined a named struct type to use for the field, but the inner anonymous struct effectively allows us to logically group fields in the outer struct with less hassle.
+
+### struct fields with `using`
+
+Another option with nested struct fields is to mark them with the reserved word using. This doesn’t change the structure of the data at all, but it makes the members of the nested struct directly accessible as if they were fields of the containing struct itself:
+
+```go
+Pet :: struct {name: string, weight: f32}
+
+Cat :: struct {
+    a: int,
+    b: f32,
+    using pet: Pet,    
+}
+
+c: Cat
+c.pet.name = "Mittens"
+c.name = "Mittens"       // same as prior line
+```
+
+Marking a nested struct field with `using` also means the containing struct type can be used where the nested type is expected as syntatic shorthand for the nested struct:
+
+```go
+p: Pet
+p = c.pet
+p = c            // same as prior line (actually assigns the nested Pet, not the Cat)
+
+// assume that function feed_pet requires a Pet argument
+feed_pet(c.pet)
+feed_pet(c)      // same as prior line (actually passes the nested Pet, not the Cat)
+```
+
+A nested struct field marked with `using` can be given the special name `_`, which makes the nested struct itself inaccessible by name (though its members can still be accessed individually as if they were members of the containing struct):
+
+```go
+Pet :: struct {
+    x: bool
+    y : int
+}
+
+Cat :: struct {
+    a: int,
+    b: f32,
+    using _: Pet,         // this Pet field itself has no name
+}
+
+// can still accesss members of the nested Pet as if they belong to Cat directly
+c: Cat
+i: int = c.y             
+```
 
 
 ## Enums
+
 An enum in Odin is an integer type with discretely named compile time values.
 
-Here we have a type Direction which is defined as a u32 enum with four named values: North with the value 0, East with the value 1, South with the value 2, and West with the value 3.
 
-We then here create a Direction variable and assign it the Direction value South, which is equivalent to the u32 value 2.
+```go
+// declare an enum type 'Direction' with four named u32 values
+Direction :: enum u32 {
+    North = 0,                 
+    East = 1,                  
+    South = 2,                
+    West = 3,
+}
 
-If we don’t specify an enums specific integer type, it defaults to int.
+// declare a variable 'd' of type Direction
+d: Direction
+d = Direction.South    // assign .South (2) to 'd'
+assert(2 == u32(d))    
+```
+
+If an enum's integer type is left unspecified, it defaults to int.
 
 If we omit the value for the first named value, it defaults to 0, and then any subsequent omitted value will default to 1 greater than the prior value.
 
+```go 
+Direction :: enum {    // defaults to int
+    North,             // first value defaults to 0
+    East = 1337,                  
+    South,             // defaults to 1338 (prior value plus 1)
+    West = -100,
+}
+```
+
 Effectively, if we omit all the values, they will run from 0 up through 1 less than the count of named values.
 
-In a context where an enum type is expected, such as in an assignment to an enum variable, we can omit the name of the enum type before the dot as shorthand.
+```go
+Direction :: enum {    // defaults to int
+    North,             // 0
+    East,              // 1       
+    South,             // 2
+    West,              // 3
+}
+```
 
-Normally we only want to use the named values of an enum, but we can actually cast any integer value into an enum type, such as here where we make a Direction value from 9 even though Direction has no named value for 9.
+In a context where an enum value is expected, such as in an assignment to an enum variable, we can omit the name of the enum type before the dot as shorthand:
 
-We can even do arithmetic with enum values, though there aren’t many cases where this is useful.
+```go
+d: Direction
+d = .South                             // Direction.South
+```
 
-In a for loop, we can loop over every named value of enum type in the order they listed in the enum definition. Here, as specified by the in clause, this loop will iterate over each named value of the Direction enum, and each iteration will assign the direction value to the first variable, d, and assign the index of the iteration to the second variable, index.
+Normally we only want to use the named values of an enum, but we can actually cast any integer value into an enum type.:
 
-We can also switch on enum values, such as here where this switch will execute the case corresponding to the value of this Direction variable. Note that we can use shorthand for the enum values in each case. 
+```go
+d: Direction
+d = Direction(9)       // OK, even though there is no named Direction value for 9
+```
 
-By default, Odin strictly demands that an enum switch have a separate case for every named value, so here when we omit cases for North and West, we’ll get a compilation error. However, if we add the #partial directive to our switch, Odin will allow us to omit cases, and we can also then have a default case.
+We can even do arithmetic with enum values (though there aren’t many cases where this is useful):
 
-To get an enum value name as a string, we can call a function from the reflect package. Enum_name_from_value returns the name of an enum value as a string. The function also returns a boolean that will be false if the enum value has no name. For instance, if the direction value here is 9, the returned boolean will be false because 9 has no name in the Direction enum.
+```go
+d: Direction
+d = Direction.West + Direction.East    // Direction(4)
+```
 
-Using another function from the reflect package allows us to go the other way: we can get an enum value from a string matching its name. Here we’re getting the Direction value named South from a string matching the name. If the string doesn’t match a named value of the specified enum type, the returned boolean will be false.
+In a `for` loop, we can loop over every named value of enum type in the order they listed in the enum definition:
 
-# enumerated arrays
+```go
+// loop over all named values of an enum type, printing:
+// 0 North 
+// 1 East
+// 2 South
+// 3 West
+for d, index in Direction {
+    fmt.println(index, d)
+}
+```
 
-One more enum-related feature are what Odin calls enumerated arrays. An enumerated array is a readonly array that is fixed at compile time and which is indexed not by number but by the named values of an enum type. 
+We can also switch on enum values, such as here where this switch will execute the case corresponding to the value of this Direction variable. Note that we can use shorthand for the enum values in each case:
 
-Here we have an enum Direction with 4 named values, and then we have a compile time array called directions_spanish, which is an array of strings and also an enumerated array of the Direction type as denoted by the enum type in place of where the array size usually goes. This means the array will have four values, one for each named value of the Direction enum, and then when we index the array, we do so not with a number but with a Direction value. When we index the array with .North, we get the string “Norte”. If the indexing expression were instead Direction(0), that’s actually the same value, so we get the same string. If, though, we try to use index Direction(4), well that’s a valid Direction value, but it’s out of bounds of the array and so here triggers a compilation error.
+```go
+d: Direction
 
-Due to some implementation details, enumerated arrays can only use enum types where the values are contiguous. If our Direction enum had non-contiguous values, then the enumerated array would trigger a compilation error. Be clear though that the written order of the enum values doesn’t matter, nor does the range need to start at 0, as long as the range is contiguous. So here the values are 3 through 6 written out of order, but the enumerated array is still valid. 
+// ...assign a value to d
 
+switch d {
+case .East:
+    // d is .East
+case .North:
+    // d is .North
+case .South:
+    // d is .South
+case .West:
+    // d is .West
+}
+```
+
+By default, Odin strictly demands that an enum switch have a separate case for every named value, so here when we omit cases for North and West, we’ll get a compilation error. However, if we add the #partial directive to our switch, Odin will allow us to omit cases, and we can also then have a default case:
+
+```go
+d: Direction
+
+// ...assign value to d
+
+// #partial required here because we do not 
+// have a case for every named value
+#partial switch d {      
+case .East:
+    // d is .East
+case .South:
+    // d is .South
+case:   // the default case (allowed by #partial)
+    // d is either .North or .West
+}
+```
+
+To get an enum value name as a string, we can call a function from the reflect package. The function `enum_name_from_value` returns the name of an enum value as a string. The function also returns a boolean that will be false if the enum value has no name:
+
+```go
+d: Direction = .South
+
+if name, ok := reflect.enum_name_from_value(d); ok {
+    fmt.println(name)   // prints “South”
+}
+```
+
+Using function `enum_from_name` from the reflect package allows us to go the other way: we can get an enum value from a string matching the value's name.
+
+```go
+// if the string doesn’t match a named value of the 
+// specified enum type, the returned boolean will be false.
+if d, ok := reflect.enum_from_name(Direction, "South"); ok {
+    fmt.println(int(d), d)     // prints “2 South”
+}
+```
+
+### enumerated arrays
+
+An *enumerated array* is a readonly array with values fixed at compile time and which is indexed not by number but by the named values of an enum type:
+
+```go
+Direction :: enum { North, East, South, West } 
+
+// declare 'direcitons_spanish' as an enumerated array of four strings
+// The four indices correspond to the named values of the Direction enum
+directions_spanish :: [Direction]string {
+    .North = "Norte",
+    .East = "Este",
+    .South = "Sur",
+    .West = "Oeste",
+}
+
+str: string
+str = directions_spanish[.North]   // "Norte"
+```
 
 ## Unions
 
-A union is a data type defined as a set of “variant” types such that the union can store values of any of its variant types.
+A union is a data type defined as a set of “variant” types:
 
-Here for example we have a union named Pet, which is defined to have 3 variant types, Cat, Dog, and Bird, which let’s assume are all struct types.
+- A union value can contain a single value of any of its variant types.
+- The size of a union value is large enough to store the union type's largest variant.
+- By default, a union value also stores a "tag", an integer that indicates the variant stored in the value.
 
-If we create a Pet variable, the variable has sufficient space to store a value of the largest variant type along with a typeid. We can assign values of any variant type to this variable without an explicit cast.
+```go
+Cat :: struct {}
+Dog :: struct {}
+Bird :: struct {}
 
-So first we assign a Cat value to p, which stores the Cat value and Cat typeid in p.
+// declare a 'Pet' as a union of Cat, Dog, and Bird
+Pet :: union { Cat, Dog, Bird }
 
-Next though we assign a Dog value to p, which overwrites the Cat value and Cat typeid with the Dog value and Dog typeid.
+// assume that Cat is denoted by tag 1, 
+// Dog by tag 2, and Bird by tag 3
 
-Again, any variant type can be implicitly cast to the union type…however, we cannot cast, even explicitly, in the other direction.
+p: Pet
+// variants of Pet can be implicitly cast to Pet
+p = Cat{}     // assign 'p' a Pet value containing the zero Cat value and tag 1
+p = Dog{}     // assign 'p' a Pet value containing the zero Dog value and tag 2
+```
 
-Instead, to get the stored value out of a union, we need to use a type assertion, just like we used for ‘any’ pointers earlier. This type assertion here tests if the union variable p currently holds a Dog. If so, it returns the Dog value and the boolean true. If not, the type assertion returns the Dog zero value and the boolean false.
+> [!NOTE]
+> In our example, the variant types of the union are all structs, but other kinds of types can also be variants in a union: numbers, strings, pointers, enums, etc. Even unions themselves can be variants of other unions.
 
-We can also use a type switch on a union value.
+While variants of a union can be implicitly cast to the union type, we cannot cast the other way around, even explicitly. Instead, to get the variant value held in a union value, we must use a *type assertion*:
 
-Here we’re switching on the Pet variable p: if p stores a Cat, then the Cat case is executed and val will have type Cat; if p stores a Dog, then the Dog case is executed and val will have type Dog; and if p stores a Bird, then the Bird case is executed and val will have type Bird.
+```go
+p: Pet
+d: Dog
 
-By default, our type switch must cover all of the variant types individually, but if we add the #partial directive on our typeswitch, then we can omit cases…and we can add a default case. Here the default case is executed when p is either a Dog or Bird, and val will have type Pet.
+p = d            // implicit cast from Dog to Pet
+d = p.(Dog)      // this type assertion gets the Dog from the union value 
 
-### union zero values
+b: Bird
 
+// this type assertion panics because the union value does not hold a Bird
+b = p.(Bird)     
 
-Normally, the zero value of a union has a nil typeid and the union zero value evaluates as equal to nil.
+ok: bool
+// returns the Bird zero value and false because the union value does not hold a Bird
+b, ok = p.(Bird)    
 
-The proper way to think about it though is that nil is normally a valid value of the union type, so here where we assign nil to p, that’s the same as if we explicitly cast nil to Pet. The important idea is that the compiler considers the nil value of one union type to be a distinct type from the nil values of other union types.
+// returns the held Dog value and true
+d, ok = p.(Dog)
+```
 
-Also regarding nil unions, a type switch on a union can optionally include a case for nil.
+By default, a union's zero value is `nil`, which has tag 0.
 
+```go
+// an uninitialized union variable has value nil
+p: Pet                
+assert(p == nil)
+```
 
-### type assertions
+When we want to handle multiple variants stored in a union value, it's generally more convenient to use a *type switch*:
 
-Now in many cases, we of course want to get the value referenced by some any-type value. Instead of dereferencing or casting to a different pointer type, though, we instead have to use what Odin calls a type assertion:  
+```go
+p: Pet
+// ... assign a value to p
 
-A type insertion is written after the any value expression with a dot and then the expected type inside parens. At runtime, the type assertion triggers a panic if the typeid in the any value doesn’t match the expected type but otherwise returns the referenced value.
+// this type switch stores the variant value from 'p' in new variable 'val',
+// whose type differs in each case
+switch val in p {
+case Cat:
+    // val is a Cat
+case Dog:
+    // val is a Dog
+case Bird:
+    // val is a Bird
+case nil:  // the nil case is optional
+    // val is nil  
+}
+```
 
-In this example, the any variable references an int variable, so the type assertion will return an int value without panicking.
+The `#partial` directive allows a type switch to omit variants of the union and optionally include a default case:
 
-For cases where we’re uncertain about the expected type, we can use the multi-return form of type assertion that returns a boolean instead of panicking. If the expected type matches the typeid in the any value, the type assertion returns true along with the referenced value. Otherwise, the type assertion returns false along with the zero value of the expected type.
+```go
+p: Pet
+// ... assign a value to p
 
-Here, again, the any variable does actually reference an int variable, so the type assertion will return the referenced int and the value true. 
+#partial switch val in p {
+case Cat:
+    // val is a Cat
+case:  // the default case (covers Dog, Bird, and nil)
+    // val is a Pet
+}
+```
 
-### type switches
-
-Another way to get the referenced values from an any value is to use a type switch.
-
-This switch here branches on the typeid of the any expression, in this case the variable a. A new variable val is assigned the referenced value and will differ in type for each case. In the int case, val will be an int variable; in the f32 case, val will be an f32 variable; in the string case, val will be a string variable; and in the default case, which runs when the type matches none of the other cases, val will have the type any.
-
-Type switches are of course more convenient than type assertions when the any value might have more than one possible type.
 
 
 ## Error values
