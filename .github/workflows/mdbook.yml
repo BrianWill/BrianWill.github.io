@@ -1,43 +1,35 @@
+---
 name: Deploy mdBook to GitHub Pages
-
 on:
   push:
-    branches: [main]
-
+    branches:
+      - main
 permissions:
   contents: read
   pages: write
   id-token: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Install mdBook
         uses: peaceiris/actions-mdbook@v1
         with:
           mdbook-version: latest
-
       - name: Build book
         run: mdbook build
-
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: book/html
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
