@@ -24,7 +24,7 @@ jobs:
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: book/html
+          path: book
   deploy:
     needs: build
     runs-on: ubuntu-latest
