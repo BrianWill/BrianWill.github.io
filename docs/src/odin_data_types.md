@@ -781,8 +781,6 @@ case:  // the default case (covers Dog, Bird, and nil)
 }
 ```
 
-
-
 ## Error values
 
 Unlike many other languages, Odin has no exception mechanism. It does have runtime panics, which are triggered by some operations, such as failing bounds checks, and these panics will unwind the call stack, but there is no way in the language to catch and recover from these panics except to do some logging and cleanup before the program terminates. Consequently, panics are not a mechanism for normal error handling.
