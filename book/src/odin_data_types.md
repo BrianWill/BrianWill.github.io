@@ -78,7 +78,7 @@ Odin also has another integer type called `rune` that represents the unicode cod
 
 ## Zero values
 
-Data types in Odin have a concept of a “zero value” that is significant in a few contexts. For example, when a variable is left uninitialized, Odin by default will zero out its bytes, giving it the zero value.
+Data types in Odin have a concept of a "zero value" that is significant in a few contexts. For example, when a variable is left uninitialized, Odin by default will zero out its bytes, giving it the zero value.
 
 Zero values by type:
 
@@ -115,7 +115,7 @@ j: My_Int = My_Int(i)        // declare a My_Int variable 'j' and assign it the 
 
 ## Literals
 
-Literals in Odin have their own distinct types, which a bit confusingly are called the “untyped” types. Integer literals are untyped integers, floating-point literals are untyped floats, boolean literals are untyped booleans, and string literals are untyped strings.
+Literals in Odin have their own distinct types, which a bit confusingly are called the "untyped" types. Integer literals are untyped integers, floating-point literals are untyped floats, boolean literals are untyped booleans, and string literals are untyped strings.
 These special untyped types have a few special rules:
 
 - First they only exist at compile time, so you can’t, say, create a variable with one of these untyped types.
@@ -133,9 +133,9 @@ a: bool = false        // untyped boolean implicitly cast to bool
 b: b16 = true          // untyped boolean implicitly cast to b16
 c: b64 = true          // untyped boolean implicitly cast to b64
 
-s: string = “hello”        // untyped string implicitly cast to string
-s16: string16 = “hello”    // untyped string implicitly cast to string16
-cs: cstring = “hello”      // untyped string implicitly cast to cstring
+s: string = "hello"        // untyped string implicitly cast to string
+s16: string16 = "hello"    // untyped string implicitly cast to string16
+cs: cstring = "hello"      // untyped string implicitly cast to cstring
 ```
 
 When a variable's declared type is inferred from a literal:
@@ -144,7 +144,7 @@ When a variable's declared type is inferred from a literal:
 i := 3         // inferred to be int
 f := 3.5       // inferred to be f64
 b := true      // inferred to be bool
-s := “hi”      // inferred to be string
+s := "hi"      // inferred to be string
 ```
 
 
@@ -222,7 +222,7 @@ arr: [100]string  // an array of 100 strings
 // an array literal with explicit indexes (can be partial and out of order)
 arr = {
     4 = "apple",
-    1 = "banana”" 
+    1 = "banana"" 
     3 = "orange",
 }
 
@@ -238,9 +238,9 @@ arr: [100]string  // an array of 100 strings
 
 // indexes in an array can be ranges
 arr = {
-    4 = “apple”,
-    10..=12 = “banana”,   // 10 through 12 (inclusive)
-    80..<82 = “orange”,   // 30 through 30 (non-inclusive)
+    4 = "apple",
+    10..=12 = "banana",   // 10 through 12 (inclusive)
+    80..<82 = "orange",   // 30 through 30 (non-inclusive)
 }    
 
 // same effect as above
@@ -655,7 +655,7 @@ To get an enum value name as a string, we can call a function from the reflect p
 d: Direction = .South
 
 if name, ok := reflect.enum_name_from_value(d); ok {
-    fmt.println(name)   // prints “South”
+    fmt.println(name)   // prints "South"
 }
 ```
 
@@ -665,7 +665,7 @@ Using function `enum_from_name` from the reflect package allows us to go the oth
 // if the string doesn’t match a named value of the 
 // specified enum type, the returned boolean will be false.
 if d, ok := reflect.enum_from_name(Direction, "South"); ok {
-    fmt.println(int(d), d)     // prints “2 South”
+    fmt.println(int(d), d)     // prints "2 South"
 }
 ```
 
@@ -691,7 +691,7 @@ str = directions_spanish[.North]   // "Norte"
 
 ## Unions
 
-A union is a data type defined as a set of “variant” types:
+A union is a data type defined as a set of "variant" types:
 
 - A union value can contain a single value of any of its variant types.
 - The size of a union value is large enough to store the union type's largest variant.
@@ -783,55 +783,186 @@ case:  // the default case (covers Dog, Bird, and nil)
 
 ## Error values
 
-Unlike many other languages, Odin has no exception mechanism. It does have runtime panics, which are triggered by some operations, such as failing bounds checks, and these panics will unwind the call stack, but there is no way in the language to catch and recover from these panics except to do some logging and cleanup before the program terminates. Consequently, panics are not a mechanism for normal error handling.
+Unlike many other languages, Odin has no exception mechanism. It does, though, have runtime "panics", which are triggered by some operations, such as failing bounds checks. Panics will unwind the call stack, but there is no way in the language to catch and recover from these panics except to do some logging and cleanup before the program terminates.
 
-Instead, normal errors in Odin are represented as ordinary data values, and these errors should follow three strong conventions:
+> [!WARNING] Panics are not a mechanism for normal error handling! An *error* represents a non-ideal eventuality beyond your code's control. A *panic* represents a bug in your code.
 
-First, error values are always represented either as boolean, enum, or union types.
+Normal errors in Odin are represented as ordinary data values, and these errors should follow three strong conventions:
 
-Second, errors are always returned by functions as the last return value. So if a function returns other things in addition to an error, the error should always be the last of the return types.
+- First, error values are always represented either as boolean, enum, or union types.
+- Second, functions which return multiple values should return the error (if any) as the last return type.
+- Third, the zero-value of an error indicates success (*i.e.* the absence of an error). A non-zero value indicates some kind of error occurred.
 
-Third, the zero-value of an error indicates success (a.k.a. the absence of an error). So, say, a function that returns a boolean error value returns false to indicate success and true to indicate an error has occurred.
+### Example of a boolean error
 
-For some examples of error values, we’ll look at a few functions from the base and core libraries. 
+```go
+import "base:intrinsics"
 
-The overflow_add function from the intrinsics package adds two numbers together and returns two values: the result of the addition plus a boolean indicating if overflow occurred. Again, true indicates that an error occurred, so the variable error here will be true in the event of an overflow.
+a := 999999999999999999
+b := 999999999999999999
 
-A number of library functions that perform allocations use this Allocator_Error enum to signal allocation errors. Because allocations may fail in multiple ways, it’s useful to convey that information with an enum instead of just using a boolean to signal that some error has occurred. 
+// overflow_add returns true if addition of its operands overflows
+result, error := intrinsics.overflow_add(a, b)
+if error {
+    // overflow occurred
+}
+```
 
-So here, say, when we call the alloc function from the mem package, it returns two values: a pointer for the allocated data plus an Allocator_Error value. If the allocation succeeds, the function will return the zero value a.k.a. the named value None. Otherwise, depending on the nature of the failure, the function will return one of the other Allocator_Error named values.
+### Example of an enum error
 
-Note that we don’t use a #partial switch here, so the compiler forces us to cover every named value of the enum. It’s unwise to ignore errors, so it’s generally best to avoid #partial switches when processing errors.
+A number of library functions that perform allocations use this `Allocator_Error` enum to signal allocation errors. Because allocations may fail in multiple ways, it’s useful to convey that information with an enum instead of just using a boolean to signal that some error has occurred: 
 
-While enum errors provide more information than a simple boolean, you sometimes want an error value with other kinds of data, such as string messages, and this is where union errors become useful. The variant types of a union can be anything, such as strings, structs, other unions, or whatever, so a union error can hold any information we need it to.
+```go
+// declared in package base:runtime
+Allocator_Error :: enum u8 {
+    None                 = 0, 
+    Out_Of_Memory        = 1, 
+    Invalid_Pointer      = 2, 
+    Invalid_Argument     = 3, 
+    Mode_Not_Implemented = 4, 
+}
+```
 
-Here’s an example union error type from the os package, one called Error.  (The #shared_nil directive, by the way, we haven’t covered, but we can ignore it here.)
+Typically the enum error value returned by a function should be handled by a switch:
 
-The function open from the os package is a function that returns a newly opened file plus a value of this union error type. What we should do in response to an error, of course, depends on the specific error and the specific context, which is beyond our scope here, but in the general case, we can account for all the possible kinds of error by using a type switch. Again you should generally be careful about using #partial type switches as they can make it too easy to ignore errors.
+```go
+import "core:mem"
+
+data, error := mem.alloc(100) 
+switch error {
+case .None: 
+    // ...  (.None indicates no error occurred)
+case .Out_Of_Memory: 
+    // ...  
+case .Invalid_Pointer: 
+    // ...  
+case .Invalid_Argument: 
+    // ...  
+case .Mode_Not_Implemented: 
+    // ...  
+}
+```
+
+> [!IMPORTANT]
+> Note that we don’t use a #partial switch here, so the compiler forces us to cover every named value of the enum. It’s unwise to ignore errors, so it’s generally best to avoid #partial switches when processing enum and union error values.
+
+
+### Example of a union error
+
+While enum errors provide more information than a simple boolean, we sometimes want an error value with other kinds of information, such as string messages, and this is where union errors become useful. The variant types of a union can be anything, such as strings, structs, other unions, or whatever, so a union error can hold any information we need it to:
+
+```go
+// declared in package core:os
+Error :: union #shared_nil {
+    os.General_Error, 
+    io.Error, 
+    runtime.Allocator_Error, 
+    os.Platform_Error, 
+}
+```
+
+Typically the union error value returned by a function should be handled by a type switch:
+
+```go
+import "core:os"
+import "core:io"
+import "base:runtime"
+
+file, error := os.open("path/to/file")
+switch e in error {
+case os.General_Error: 
+    // ...  
+case io.Error: 
+    // ...  
+case runtime.Allocator_Error: 
+    // ...  
+case os.Platform_Error: 
+    // ...  
+}
+```
 
 
 ### `or_return`
 
-Very commonly with error values, we want to immediately return the error if it is non-zero. Here we’re getting the error returned from the function then immediately returning it if it is non-zero.
+Very commonly with error values, we want to immediately return the error if it is non-zero. Here we’re getting the error returned from the function then immediately returning it if it is non-zero:
 
-This pattern is so common that Odin provides the or_return operator as shorthand for the same logic.
+```go
+result, error := intrinsics.overflow_add(a, b)
+if error {
+    return error     // return the error
+}
+```
 
-The or_return operator follows its operand, which is always a function call returning at least one value, and the or_return effectively consumes the last returned value and returns if it is non-zero. In this case, the overflow_add call returns a result and an error, but the or_return consumes the error, so the whole or_return expression only returns the result.
+This pattern is so common that Odin provides the `or_return` operator as shorthand for the same logic:
 
-Note that because this example may return a boolean, it can only be used in a function that also returns a boolean error. If we use on_return with a function call that returns an enum or union type error, the containing function must also return that same error type.
+```go
+// same effect as prior example
+result := intrinsics.overflow_add(a, b) or_return
 
-To use or_return inside a function that returns multiple types, then it must abide the Odin convention of putting the error type last, and it must also make the return types named  variables. Here for example, the return types of function foo are given variable names, x, y, and err, which allows us to then use or_return in the function on any call that returns a bool as its last return type.
+```
+
+In a single-return function, the left operand of an `or_return` must match the function's return type.
+
+In a multi-return function, the return values must be named:
+
+```go
+foo :: proc() -> (x: int, y: string, error: bool) {
+    x = 3
+    y = "hi"
+    error = false
+
+    bar() or_return   // returns 3, "hi", and the boolean returned by bar()
+    // ...
+}
+```
 
 
 ### `or_break`
 
-Odin also has an or_break operator, which is just like or_return except it performs a break rather than a return.
+The `or_break` operator is basically like `or_return` except it performs a break rather than a return:
+
+```go
+result, error := intrinsics.overflow_add(a, b)
+if error {
+    break
+}
+```
+
+```go
+// same effect as above
+result := intrinsics.overflow_add(a, b) or_break
+```
 
 ### `or_continue`
-And there’s also an or_continue operator, which is just like or_break except it continues instead of breaks.
+
+The `or_continue` operator is like `or_break` except it performs a continue rather than a break:
+
+```go
+result, error := intrinsics.overflow_add(a, b)
+if error {
+    continue
+}
+```
+
+```go
+// same effect as above
+result := intrinsics.overflow_add(a, b) or_continue
+```
+
 ### `or_else`
 
-Lastly there is or_else, which unlike the other operators, takes a second operand on its right. The right operand is only evaluated if the left operand returns a non-zero error, and then the or_else expression evaluates into the right operand value instead of the left operand. In effect, an or_else lets us conveniently substitute a default value in the event of an error.
+Lastly there is `or_else`, which unlike the other operators, takes a second operand on its right. The right operand is only evaluated if the left operand returns a non-zero error, and then the `or_else` expression evaluates into the right operand value instead of the left operand. In effect, an `or_else` lets us conveniently substitute a default value in the event of an error:
 
+```go
+result, error := intrinsics.overflow_add(a, b)
+if error {
+    result = 123
+}
+```
+
+```go
+// same effect as above
+result := intrinsics.overflow_add(a, b) or_else 123
+```
 
 
