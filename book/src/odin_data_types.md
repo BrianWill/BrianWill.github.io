@@ -483,56 +483,6 @@ d.nested = struct {a = 5, b = 3.6}
 
 The semantics would be exactly the same if we defined a named struct type to use for the field, but the inner anonymous struct effectively allows us to logically group fields in the outer struct with less hassle.
 
-### struct fields with `using`
-
-Another option with nested struct fields is to mark them with the reserved word using. This doesn’t change the structure of the data at all, but it makes the members of the nested struct directly accessible as if they were fields of the containing struct itself:
-
-```go
-Pet :: struct {name: string, weight: f32}
-
-Cat :: struct {
-    a: int,
-    b: f32,
-    using pet: Pet,    
-}
-
-c: Cat
-c.pet.name = "Mittens"
-c.name = "Mittens"       // same as prior line
-```
-
-Marking a nested struct field with `using` also means the containing struct type can be used where the nested type is expected as syntatic shorthand for the nested struct:
-
-```go
-p: Pet
-p = c.pet
-p = c            // same as prior line (actually assigns the nested Pet, not the Cat)
-
-// assume that function feed_pet requires a Pet argument
-feed_pet(c.pet)
-feed_pet(c)      // same as prior line (actually passes the nested Pet, not the Cat)
-```
-
-A nested struct field marked with `using` can be given the special name `_`, which makes the nested struct itself inaccessible by name (though its members can still be accessed individually as if they were members of the containing struct):
-
-```go
-Pet :: struct {
-    x: bool
-    y : int
-}
-
-Cat :: struct {
-    a: int,
-    b: f32,
-    using _: Pet,         // this Pet field itself has no name
-}
-
-// can still accesss members of the nested Pet as if they belong to Cat directly
-c: Cat
-i: int = c.y             
-```
-
-
 ## Enums
 
 An enum in Odin is an integer type with discretely named compile time values.

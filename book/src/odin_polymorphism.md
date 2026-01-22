@@ -70,7 +70,7 @@ Proc groups give us the stylistic and organizational convenience of overloading 
 
 *Parametric polymorphic procedures* are Odin's semi-equivalent of generic functions in other languages. A procedure is parameteric polymorphic if it has any parameters whose arguments and/or types are fixed for each call at compile time.
 
-#### parameters with compile time arguments
+#### Parameters with compile time arguments
 
 A parameter which requires a compile time expression argument is denoted by a `$` prefix on the parameter name: 
 
@@ -128,7 +128,7 @@ bool_ptr, _ := my_new(bool)
 > [!NOTE]
 > For a parameteric polymorphic procedure, separate versions of procedure are compiled for each unique call signature. For instance, in the above example, the two calls to `my_new` actually invoke different code: one for which T is an int and one for which T is a bool.
 
-#### parameters with compile time types
+#### Parameters with compile time types
 
 When a parameter’s *type* is prefixed with a dollar sign, that indicates that the parameter’s *type* is determined at compile time by the type of the argument:
 
@@ -156,7 +156,7 @@ assert(str_arr == [5]{"hi", "hi", "hi", "hi", "hi"})
 > Again, separate versions of a procedure are compiled for each unique call signature, so in the above example, the two calls to `repeat_five` invoke different code: one for which T is a bool and one for which T is a string.
 
 > [!WARNING] 
-> Don't be confused that we used "T" as the name for the typeid parameter name earlier but here now use "T" as the name for the parameter type itself. In the former case, the type "T" is determined by the *typeid value* passed as argument; in the latter case, the type "T" is determined by the *type* of the passed argument.
+> Don't be confused that we used "T" as the name for the `typeid` parameter name earlier but here now use "T" as the name for the parameter type itself. In the former case, the type "T" is determined by the *`typeid` value* passed as argument; in the latter case, the type "T" is determined by the *type* of the passed argument.
 
 The compile time type establisehd by a parameter can be used as the type of subsequent parameters in the parameter list:
 
@@ -182,7 +182,7 @@ clamped_float := clamp(f32(8.3), 2, 5)           // T is f32
 clamped_bool := clamp(true, false, false)       
 ```
 
-####  parameters with both compile time arguments and compile time types
+#### Parameters with both compile time arguments *and* compile time types
 
 An individual parameter can have both a compile time argument *and* a compile time type:
 
@@ -200,76 +200,237 @@ arr_B: ^[5]u8
 arr_B = array_n(u8(5))
 ```
 
-#### where clauses
+#### `where` clauses
 
-In some cases, we may wish to restrict which compile time types and arguments are allowed for a function, and we can do this with a where clause. The where clause of a function has a compile time boolean expression which is evaluated for each call of the function. If the expression evaluates false, it triggers a compilation error. 
+In some cases, we may wish to restrict which compile time types and arguments are allowed for a function, and we can do this by adding a `where` clause. The `where` clause of a function has a compile time boolean expression which is evaluated for each call of the function. If the expression evaluates false, the call triggers a compilation error.
 
-For an example, we can add a where clause to the clamp function to ensure that the arguments are a numeric type. A call to clamp with int arguments is still OK because int is numeric, but a call with string arguments now fails because strings are not numeric, making the where clause here evaluate false.
+```go
+// the where clause's boolean expression determines 
+// if each call is valid at compile time
+// (type_is_numeric returns true if its argument is a numeric type)
+clamp :: proc(val: $T, min: T, max: T) -> T where intrinsics.type_is_numeric(T) {
+    if val <= min {
+        return min
+    }
+    if val >= max {
+        return max
+    }
+    return val
+}
 
-#### specialization
+// OK: int is valid for T because it is numeric
+clamped_int := clamp(8, 2, 5)                          
 
-Another way to express restrictions of the parameters’ compile time types is with what is called specialization. For the most part, specialization is just shorthand syntax for what you otherwise can express in a where clause, but unlike a where clause, specialization can introduce new type parameters. 
+// compile error: string is invalid for T because it is not numeric
+clamped_string := clamp("banana", "orange","apple")     
+```
 
-Here for example we have a sum function that returns the sum of all elements in a slice. To ensure that the argument is a slice of a numeric type, we use both specialization and a where clause. Specialization is denoted by a slash after the parameter type, followed by another type. In this case the type after the slash is a slice of $E, where E is an additional type parameter. We couldn’t just use T here because then we’d be saying that T must be a slice of itself, which isn’t logically possible. Instead, we introduce an additional type parameter so that it can be some other type. The additional type parameter is then used in the where clause to test if the slice element type is numeric.
+#### Specialization
 
-(By the way, ‘E’ stands for Element, as in ‘element of a slice’, so it is the conventional name in this situation.) 
+For the most part, *specialization* is just shorthand syntax for what you can otherwise express in a `where` clause, but unlike a `where` clause, specialization can introduce new type parameters: 
 
-Without specialization, we could still express the same thing using just a where clause, but the code is then arguably harder to read.
+```go
+// slash after T indicates a specialization of T,
+// in this case the additional requirement that T is a slice of E
+// (where E is its own type parameter)
+sum :: proc(val: $T/[]$E) -> T where intrinsics.type_is_numeric(E) {
+    // ...
+}
+
+// valid: []int is a slice of a numeric type
+i := sum([]int{8, 2, 5})                   
+
+// compile error: not numeric
+i = sum([]bool{true, false})               
+
+// compile error: not a slice
+i = sum(8)                                 
+```
+
+> [!NOTE]
+> ‘E’ stands for Element, as in ‘element of a slice’, so it is the conventional name in this situation.
+
+In this case, we could express the same thing using just a `where` clause with no specialization, but the code is then arguably harder to read:
+
+```go
+// type_elem_type returns the type of the 
+sum :: proc(val: $T) -> T where intrinsics.type_is_numeric(intrinsics.type_elem_type(T)) {
+    // ...
+}
+```
+
+### Parameteric polymorphic structs
+
+What Odin calls a parametric polymorphic struct is a near equivalent of what other languages would call a generic struct (or a templated struct in C++). The type parameters are expressed as `typeid` params with `$`-prefixed name.
+
+```go
+// T and U act as effective type parameters
+Cat :: struct ($T: typeid, $U: typeid) {
+    x: T,
+    y: int,
+    z: [5]U,
+}
+
+c: Cat(f32, string)         // variant where $T is f32 and $U is string
+c2: Cat(int, string)        // variant where $T is int and $U is string
+
+// compile error: c and c2 are different variants of Cat
+c = c2                      
+
+// compile error: Cat itself is not a type
+cat: Cat                    
+```
+
+> [!IMPORTANT]
+> Despite sharing the same name, variations of the same parameteric struct are distinct, incompatible types.
+
+Aside from compile time `typeid` params, a struct can also have compile time unsigned integer params, which can be used to specify sizes of arrays in the struct:
+
+```go
+// N is a compile time integer parameter, so
+// it can be used to specify array sizes
+Cat :: struct ($T: typeid, $U: typeid, $N: uint) {
+    x: T,
+    y: int,
+    z: [N]U,
+}
+
+c: Cat(f32, string, 4)         // variant where $N is 4
+c2: Cat(f32, string, 6)        // variant where $N is 6
+
+arr: [4]string = c.z
+```
+
+A struct can also optionally have a `where` clause, whose boolean expression is evaluated for each variant at compile time:
 
 
+```go
+Cat :: struct ($T: typeid, $U: typeid, $N: uint) where N < 10 {
+    a: T,
+    b: int,
+    c: [N]U,
+}
 
-### parameteric polymorphic structs
+// valid because 6 is less than 10
+c: Cat(f32, string, 6)       
 
-What Odin calls a parametric polymorphic struct is a near equivalent of what other languages would call a generic struct (or a templated struct in C++). Here the struct Cat has two parameters, T and U, both typeids, that function effectively as type parameters.
+// compile error: invalid because 11 is greater than 10
+c2: Cat(int, string, 11)     
+```
 
-The dollar sign on the parameter names indicates that the values must be compile time expressions. When we use the Cat type, we must then provide compile time type arguments.
+The most obvious use case for generic types are collections. For example, a stack:
 
-Here we’re declaring two Cat variables, one for which T is an f32 and U is a string, and another variable for which T is an int and U is a string. Because they are composed of different types, they are actually completely distinct struct types that just share the same name, so we cannot assign one of these variables to the other, and there is no option to cast between them.
+```go
+Stack :: struct($T: typeid) {
+    data: [dynamic]T,
+}
 
-Also be clear that Cat with no type arguments is not a valid type.
+make_stack :: proc($T: typeid) -> Stack(T) { /* ... */ }
 
-Aside from compile type typeids, another kind of parameter we can give a struct is a compile time integer value, which is useful for specifying sizes of arrays in the struct. Here for example, the parameter N is used to specify the size of the array field c. Like with the typeids arguments, structs with different integer arguments are considered to be completely distinct types with different sizes and memory layouts.
+push :: proc(stack: $T/^Stack($E), val: E) { /* ... */ }
 
-A parametric polymorphic struct can optionally have a where clause. A where clause contains a compile time boolean expression that is evaluated for each variant of the type, and if the expression evaluates false, the variant is rejected by the compiler. Here for example, the where clause specifies that N must be less than 10, and so a Cat where N is 6 is OK, but a Cat where N is 11 triggers a compilation error.
+pop :: proc(stack: $T/^Stack($E)) -> E { /* ... */ }
 
-polymorphism via parapoly struct
+// make a stack of ints
+s := make_stack(int)  
 
-The most obvious use case for generic types are collections. Here for example we define a parapoly struct named Stack that is composed of a dynamic array of T. Odin has no concept of methods, but we can define parapoly procedures to implement the methods of this stack. The Make_stack procedure fills the role of a constructor which simply takes the desired type as argument, while push and pop both require a pointer to the stack. This is expressed as a type parameter which is specialized to be a Stack of type E, where E itself is another type parameter. As we said earlier, specialization is often just a shorthand for what can be expressed in a where clause, but in these cases, we want to enforce that the second argument of push and the return type of pop must match the element type of the stack argument, and the only way to express this is with specialization.
+// push 4 then 7 to the stack
+push(&s, 4)
+push(&s, 7)
 
-Anyway, having defined this stack type and its operations, we can then create a stack with any kind of element without having to write more than one stack definition.
+// remove and return last value from the stack (7)
+i := pop(&s)               // returns 7
+```
 
-Aside from collections, another possible use case for a parapoly struct is to imitate inheritance, at least in part. This Pet struct defines a few fields common to all pets but then also has a field whose type is plugged in from the type parameter T.  If we then define structs to represent the data that is unique for each specific kind of pet, we can make specific variants of Pet. Here a dog is represented as a Pet with Dog_Data, and a cat is represented as a Pet with Cat_Data. Effectively, then, the data field of a dog has dog-specific data while the data field of a cat has cat-specific data.
-
-To define a function that operates on any kind of Pet, we again can define parapoly functions. Here the sleep function takes any argument which can be any variant of Pet.
-
-Now is this actually a good solution? Maybe not. Unlike proper inheritance in other languages, this solution doesn’t allow for runtime dispatch, nor does it allow for anything like method overriding.
-
-### parameteric polymorphic unions
-
-Like structs, unions can also have compile time typeid and integer parameters, which effectively allows us to create variants from a single union definition.
-
-Here we create a variable of type Pet, where the variant types are f32, int, and 4-string arrays. We can then assign any value of these types to the variable without an explicit cast.
-
-Just be clear, like with parametric polymorphic structs, each unique variant is a distinct type, and thus, say here, a Pet union with 6-string arrays as a variant type is distinct from a Pet union with 4-string arrays as a variant type.
-
-polymorphism via parapoly union
-
-One more mechanism in Odin for compile time polymorphism is parapoly unions. Compared to parapoly structs, the use cases for parapoly unions are less obvious aside from two:
-
-First, a Result type, as it’s usually called, is a way of expressing the result of an operation that might not be available because an error occurred. Here this Result union is either a value of type parameter T or an Error. By virtue of the type parameter, we can define Result just once instead of separately for every possible kind of result we want to use.
-
-In practice, however, Odin code generally won’t make use of a Result type because the Odin convention is to separately return errors from multi-return functions instead of mixing errors with other values in a union.
-
-Probably, then, the only real use case for parapoly unions in Odin is for cases where a union includes other parapoly types. Here this Pet union includes variant types Dog and Cat which themselves are parapoly structs, and so in order to pass on type arguments to these variants, the union itself must have type parameters.
-
-Outside of these cases, though, uses for parapoly unions are generally quite rare.
+> [!NOTE]
+> Specialization is often just a shorthand for what can be expressed in a `where` clause, but in the example above, we want to enforce that the second argument of push and that the return type of pop must match the element type of the stack argument, and the only way to express this is with specialization.
 
 
+### Parameteric polymorphic unions
+
+Like structs, unions can also have compile time `typeid` and unsigned integer parameters:
+
+```go
+Pet :: union ($T: typeid, $U: typeid, $N: uint) {
+    T,
+    int,
+    [N]U,
+}
+
+p: Pet(f32, string, 4)         // variant with [4]string
+p2: Pet(f32, string, 6)        // variant with [6]string
+
+// implicit cast to Pet(f32, string, 4)
+p = [4]string{}                
+
+// implicit cast to Pet(f32, string, 6)
+p2 = [6]string{}                
+
+// compile error: p and p2 are different variants of Pet
+p = p2        
+
+// compile error: Pet itself is not a type
+pet: Pet  
+```
+
+Compared to parapoly structs, the use cases for parapoly unions are less obvious aside from two:
+
+- First, a Result type, as it’s usually called, is a way of expressing the result of an operation that might not be available because an error occurred. Here this Result union is either a value of type parameter T or an Error. By virtue of the type parameter, we can define Result just once instead of separately for every possible kind of result we want to use. In practice, however, Odin code generally won’t make use of a Result type because the Odin convention is to separately return errors from multi-return functions instead of mixing errors with other values in a union.
+- Probably, then, the only real use case for parapoly unions in Odin is for cases where a union includes other parapoly types. Here this Pet union includes variant types Dog and Cat which themselves are parapoly structs, and so in order to pass on type arguments to these variants, the union itself must have type parameters.
+
+Outside of these use cases, parapoly unions are generally quite rare.
 
 
+### Struct fields with the `using` modifier
+
+A struct field which is itself of a struct type can be marked with the reserved word `using`. This modifier doesn’t change the structure of the data at all, but it makes the members of the nested struct directly accessible as if they were fields of the containing struct itself:
+
+```go
+Pet :: struct {name: string, weight: f32}
+
+Cat :: struct {
+    a: int,
+    b: f32,
+    using pet: Pet,    
+}
+
+c: Cat
+c.pet.name = "Mittens"
+c.name = "Mittens"       // same as prior line
+```
+
+Marking a nested struct field with `using` also means the containing struct type can be used where the nested type is expected as syntatic shorthand for the nested struct:
+
+```go
+p: Pet
+p = c.pet
+p = c            // same as prior line (actually assigns the nested Pet, not the Cat)
+
+// assume that function feed_pet requires a Pet argument
+feed_pet(c.pet)
+feed_pet(c)      // same as prior line (actually passes the nested Pet, not the Cat)
+```
+
+A nested struct field marked with `using` can be given the special name `_`, which makes the nested struct itself inaccessible by name (though its members can still be accessed individually as if they were members of the containing struct):
+
+```go
+Pet :: struct {
+    x: bool
+    y : int
+}
+
+Cat :: struct {
+    a: int,
+    b: f32,
+    using _: Pet,         // this Pet field itself has no name
+}
+
+// can still accesss members of the nested Pet as if they belong to Cat directly
+c: Cat
+i: int = c.y             
+```
 
 
-### polymorphism via using in a struct
 
 Another way in Odin that you might try to approximate type inheritance is through simple composition. Here we’ve inverted the pattern of the prior example: instead of the Pet containing a more specific kind of Pet, the specific types of Pet themselves contain an instance of Pet. Effectively, both Cat and Dog can have their own unique data while sharing in common the data that defines a Pet. As we did with the parapoly struct, we can define a parapoly function that accepts any kind of pet as input. 
 
@@ -344,11 +505,11 @@ Another problem here, as mentioned, is that an untyped pointer is too unrestrict
 
 Odin has one more pointer type called `any`, which is like a `rawptr` but which additionally contains a `typeid`.
 
-Every type in the language can be implicitly cast to any, and what we get back in this case is a value of type any that contains the typeid of int and the address of i.
+Every type in the language can be implicitly cast to any, and what we get back in this case is a value of type any that contains the `typeid` of int and the address of i.
 
 Note that this is actually a bit odd and inconsistent with the rest of the language, syntactically, because despite not using the address operator, the resulting any value contains the address of the int variable, not its value.
 
-The reason for this inconsistency is that it allows casting from a pointer to produce an any value with the same address but the typeid of the pointer type. So here when the pointer to i is cast to any, the resulting value has the typeid of int pointer instead of int. 
+The reason for this inconsistency is that it allows casting from a pointer to produce an any value with the same address but the `typeid` of the pointer type. So here when the pointer to i is cast to any, the resulting value has the `typeid` of int pointer instead of int. 
 
 Even more strange, we can actually cast an arbitrary expression into an any, and the compiler will allocate space on the call stack for the resulting value. Here the result of the expression 3 + i will be stored somewhere in the call stack frame, and the any value assigned to this variable ‘a’ will point to that location.
 
