@@ -5,10 +5,220 @@ This text accompanies two videos that cover polymorphism in the Odin programming
 - [Compile-time Polymorphism in Odin]()
 - [Runtime Polymorphism in Odin]()
 
-See also the pre-requisite topic, [Data Types in Odin](odin_data_types.md)
+This follows from the pre-requisite topic, [Data Types in Odin](odin_data_types.md)
 
 
-# parameteric polymorphic structs
+## What is polymorphism?
+
+Wikipedia defines polymorphism succinctly: 
+
+> “...polymorphism allows a value type to assume different types.” 
+
+Where otherwise a single thing could only be one concrete type or behave in one way, polymorphism allows a thing to potentially vary in type and behave in different ways.
+
+Another way to think of it: mechanisms of polymorphism allow us to express that a piece of code has variants that are similar but somehow different. In this sense, mechanisms of polymorphism enable abstraction building beyond what just plain functions and plain data types allow, *i.e.* polymorphism gives us additional ways to generalize.
+
+Now, how much one *should* attempt to generalize, to abstract, in code is a very debatable question, but polymorphism is useful to have in your toolset. One very common case is the need to express heterogenous data in a collection and then operate upon all elements of the collection. In C#, for example, we can create an array of Pets that may store any kind of Pet, whether a Cat or Dog, and then we can iterate through the collection and perform a common operation on every Pet regardless of its concrete type:
+
+```csharp
+// C#
+Pet[] pets = new Pet[2];
+pets[0] = new Cat();
+pets[1] = new Dog();
+
+foreach (var p in pets) {
+    p.sleep();    // dynamic dispatch
+}
+```
+
+This is enabled either by virtue of Cat and Dog inheriting from class Pet *or* by Cat and Dog implementing an interface Pet. Odin, however, lacks inheritance, interfaces, and other common polymorphism-related language features. So we'll look at how look at how this and similar problems can be solved in Odin by other means.
+
+
+## Compile time polymorphism
+
+It’s helpful to distinguish between ***compile time* polymorphism** and ***runtime* polymorphism**, not just because their implementations differ but but also because they serve quite different purposes. Compile time polymorphism serves two purposes:
+
+- deduplicating code
+- overloading names
+
+In Odin, compile time polymorphism is enabled through a few features:
+
+- proc groups
+- parametric polymorphic procs
+- parametric polymorphic structs
+- parametric polymorphic unions
+- the `using` modifier for struct fields
+
+### Proc groups
+
+*Proc groups*, very simply, are procedures that are defined not as a body of code but rather as a list of other procedures. At compile time, a call to a proc group dispatches to the procedure in its list that matches the number and types of arguments in the call.
+
+```go
+sleep_cat :: proc(cat: Cat) { /* ... */ }
+sleep_dog :: proc(dog: Dog) { /* ... */ }
+
+// a proc group 'sleep`
+sleep :: proc { sleep_cat, sleep_dog }
+
+sleep(Cat{})       // one Cat argument, so invokes sleep_cat
+sleep(Dog{})       // one Dog argument, so invokes sleep_dog
+```
+
+Proc groups give us the stylistic and organizational convenience of overloading a procedure name so that we can use a single name at the call sites. Unlike overloading in other languages, however, we still have to give the individual overloads their own names.
+
+### Parametric polymoprhic procs (generic functions)
+
+*Parametric polymorphic procedures* are Odin's semi-equivalent of generic functions in other languages. A procedure is parameteric polymorphic if it has any parameters whose arguments and/or types are fixed for each call at compile time.
+
+#### parameters with compile time arguments
+
+A parameter which requires a compile time expression argument is denoted by a `$` prefix on the parameter name: 
+
+```go
+foo :: proc($x: int) { /* ... */ }
+
+foo(3)        // valid because 3 is a compile time expression
+
+i := 3
+foo(i)        // compile error: argument is not a compile time expression
+```
+
+One way a compile time argument can be useful is to specify array sizes:
+
+```go
+// the argument for 'n' must be compile time expression, 
+// but this allows us to use 'n' as an array size
+make_array :: proc($n: uint) -> [n]f32 {
+    arr: [n]f32
+    return arr
+}
+
+arr_A := make_array(3)   // returns an array of 3 float 32s
+arr_B := make_array(7)   // returns an array of 7 float 32s
+```
+
+A compile time argument can also allow some expressions to be evaluated at compile time:
+
+```go
+mul :: proc($val: f32) -> f32 {
+    return val * val;     // val * val is evaluated at compile time
+}
+```
+
+To get a similar effect as what other languages call a type parameter, we can use `typeid` parameters that receive compile time arguments. 
+
+> [!NOTE]
+> Every unique type in your program is given a unique integer id called a `typeid`. Type names themselves are compile time `typeid` expressions, and the builtin function `typeid_of` returns the `typeid` of its single argument's type, *e.g.* `typeid_of(Cat{})` returns the `typeid` of Cat.
+
+```go
+// (slightly simplified version of runtime.new)
+// 'T' is a compile time typeid expression, so it can be used like a type name
+// Effectively, this one function can return any kind of pointer.
+my_new :: proc($T: typeid) -> (^T, runtime.Allocator_Error) {
+   return runtime.new_aligned(T, align_of(T))
+}
+
+int_ptr: ^int
+int_ptr, _ := my_new(int)
+
+bool_ptr: ^bool
+bool_ptr, _ := my_new(bool)
+```
+
+> [!NOTE]
+> For a parameteric polymorphic procedure, separate versions of procedure are compiled for each unique call signature. For instance, in the above example, the two calls to `my_new` actually invoke different code: one for which T is an int and one for which T is a bool.
+
+#### parameters with compile time types
+
+When a parameter’s *type* is prefixed with a dollar sign, that indicates that the parameter’s *type* is determined at compile time by the type of the argument:
+
+```go
+// the arguments to 'val' can be a runtime expression of any type, 
+// and T can be used as a type name
+repeat_five :: proc(val: $T) -> [5]T {
+    arr: [5]T
+    for _, i in arr {
+        arr[i] = val
+    }
+    return arr
+}
+
+bool_arr: [5]bool
+bool_arr = repeat_five(true)
+assert(bool_arr == [5]{true, true, true, true, true})
+
+str_arr: [5]string
+str_arr = repeat_five("hi")
+assert(str_arr == [5]{"hi", "hi", "hi", "hi", "hi"})
+```
+
+> [!NOTE]
+> Again, separate versions of a procedure are compiled for each unique call signature, so in the above example, the two calls to `repeat_five` invoke different code: one for which T is a bool and one for which T is a string.
+
+> [!WARNING] 
+> Don't be confused that we used "T" as the name for the typeid parameter name earlier but here now use "T" as the name for the parameter type itself. In the former case, the type "T" is determined by the *typeid value* passed as argument; in the latter case, the type "T" is determined by the *type* of the passed argument.
+
+The compile time type establisehd by a parameter can be used as the type of subsequent parameters in the parameter list:
+
+```go
+// in each call, 'min' and 'max' will have the same type as 'val'
+// ($ should only prefix the first T parameter)
+clamp :: proc(val: $T, min: T, max: T) -> T {
+    // for the function to compile, 
+    // T must be valid operands of <= and =>
+    if val <= min {
+        return min
+    }
+    if val >= max {
+        return max
+    }
+    return val
+}
+
+clamped_int := clamp(int(8), 2, 5)               // T is int
+clamped_float := clamp(f32(8.3), 2, 5)           // T is f32
+
+// compile error: T cannot be a boolean
+clamped_bool := clamp(true, false, false)       
+```
+
+####  parameters with both compile time arguments and compile time types
+
+An individual parameter can have both a compile time argument *and* a compile time type:
+
+```go
+// the array size is determined by the value passed to 'n',
+// and the type of the array is determined by the type passed for 'n'
+array_n :: proc($n: $T) -> ^[n]T {
+    return runtime.new([n]T)
+}
+
+arr_A: ^[3]int
+arr_A = array_n(3)           
+
+arr_B: ^[5]u8
+arr_B = array_n(u8(5))
+```
+
+#### where clauses
+
+In some cases, we may wish to restrict which compile time types and arguments are allowed for a function, and we can do this with a where clause. The where clause of a function has a compile time boolean expression which is evaluated for each call of the function. If the expression evaluates false, it triggers a compilation error. 
+
+For an example, we can add a where clause to the clamp function to ensure that the arguments are a numeric type. A call to clamp with int arguments is still OK because int is numeric, but a call with string arguments now fails because strings are not numeric, making the where clause here evaluate false.
+
+#### specialization
+
+Another way to express restrictions of the parameters’ compile time types is with what is called specialization. For the most part, specialization is just shorthand syntax for what you otherwise can express in a where clause, but unlike a where clause, specialization can introduce new type parameters. 
+
+Here for example we have a sum function that returns the sum of all elements in a slice. To ensure that the argument is a slice of a numeric type, we use both specialization and a where clause. Specialization is denoted by a slash after the parameter type, followed by another type. In this case the type after the slash is a slice of $E, where E is an additional type parameter. We couldn’t just use T here because then we’d be saying that T must be a slice of itself, which isn’t logically possible. Instead, we introduce an additional type parameter so that it can be some other type. The additional type parameter is then used in the where clause to test if the slice element type is numeric.
+
+(By the way, ‘E’ stands for Element, as in ‘element of a slice’, so it is the conventional name in this situation.) 
+
+Without specialization, we could still express the same thing using just a where clause, but the code is then arguably harder to read.
+
+
+
+### parameteric polymorphic structs
 
 What Odin calls a parametric polymorphic struct is a near equivalent of what other languages would call a generic struct (or a templated struct in C++). Here the struct Cat has two parameters, T and U, both typeids, that function effectively as type parameters.
 
@@ -22,151 +232,6 @@ Aside from compile type typeids, another kind of parameter we can give a struct 
 
 A parametric polymorphic struct can optionally have a where clause. A where clause contains a compile time boolean expression that is evaluated for each variant of the type, and if the expression evaluates false, the variant is rejected by the compiler. Here for example, the where clause specifies that N must be less than 10, and so a Cat where N is 6 is OK, but a Cat where N is 11 triggers a compilation error.
 
-
-
-## Parametric polymoprhic procs (generic functions)
-
-
-### parameteric polymorphic unions
-
-Like structs, unions can also have compile time typeid and integer parameters, which effectively allows us to create variants from a single union definition.
-
-Here we create a variable of type Pet, where the variant types are f32, int, and 4-string arrays. We can then assign any value of these types to the variable without an explicit cast.
-
-Just be clear, like with parametric polymorphic structs, each unique variant is a distinct type, and thus, say here, a Pet union with 6-string arrays as a variant type is distinct from a Pet union with 4-string arrays as a variant type.
-
-
-### compile time arguments
-
-Like we’ve already seen with structs and unions, functions in Odin can have compile time arguments, as denoted by a dollar sign prefix on the parameter name. 
-
-Here, for example, this function foo has a single parameter, an int named x which has the $ prefix, meaning it requires a compile time expression for its argument. So if we call this function with a number literal, that’s valid, but if we try to pass the function a variable, we get a compilation error.
-
-One way a compile time argument can be useful is to specify array sizes. Here this function returns an array whose size is determined by a compile time argument.
-
-Another way a compile time argument might help is if they allow some expressions to be evaluated at compile time. Here if the second argument, val, is also a compile time argument, then the calculation of val * val can be computed at compile time, thus avoiding some work at runtime.
-
-Lastly, we can use compile time typeids as a way to specify types, much like we saw with structs and unions. Here this function returns a pointer to T, where T is determined by a compile time argument, and thus this single function can effectively return any kind of pointer.
-
-By the way, if you’re wondering about the implementation, the simplest explanation is that each function call with a unique combination of compile time arguments necessitates the compiler to generate a variant of the function. For instance, if our program calls this function sometimes with int and sometimes with string, those calls will invoke two different compiled versions of the function: one for ints and one for strings.
-
-The same can be said of structs and unions with compile time parameters: each unique combination of arguments necessitates the compiler to generate a variant of the type.
-
-In this way, you could think of this feature as analogous to templates in C++ and similar meta-programming features in other languages.
-
-
-### compile time parameter types
-
-When a parameter’s type is prefixed with a dollar sign, that indicates that the parameter’s type is determined at compile time by the type of the argument.
-
-Here for example we have a function repeat_five, which has a single parameter of type $T and returns an array of size 5 and type T.  In the function, the argument value is assigned to every index of the returned array.
-
-If our program calls this function with, say, a bool value, the compiler will generate a version of the function for which T is bool, and if our program calls this function with a string value, the compiler will generate a version of the function for which T is string. So here the first call, which passes true, returns an array of 5 bools, all set to true, and the second call, which passes a string “hi”, returns an array of 5 strings, all set to that string “hi”.
-
-For another example, here’s a function clamp where the first parameter has type $T, and the other two parameters use the same type T. If instead we wanted the function to have different compile time types that didn’t necessarily match, we could give the other parameters their own dollar sign types, but in this case, we want the parameter types all to match. As a rule, the dollar sign should go on the first T in the parameter list and only the first T; otherwise we’ll get a compile error.
-
-Anyway, if we then call this clamp function with int arguments, then the compiler invokes a version of clamp in which T is int, and so the call returns an int. Likewise, if we call clamp with f32 arguments, then the compiler invokes a version of clamp in which T is f32, and so the call returns an f32. 
-
-In both of these calls, the compiler infers the type of T from the first argument and then expects the types of the other two arguments to match. So the untyped integers 2 and 5 are being implicitly cast to int in the first call and f32 in the second call.
-
-In the case of the first call, we could actually leave out the cast, because the untyped integer 8 would be presumed to represent an int in this context.
-
-Now, if we try calling this function with most non-numeric types, like bool, we’ll get compile errors because the version of clamp where T is bool cannot compile: bools cannot be compared with the less than or greater than operators. 
-
-The only non-numeric types that work for T here are strings because strings in Odin actually can be compared with the less than and greater than operators. So this call is valid, even though calling clamp with strings doesn’t really produce a meaningful result.
-
-
-### using a parameter with both a compile time value and compile time type
-
-An individual parameter of a function can have both a compile time argument and a compile time type, and this is useful in a few cases.
-
-Here we have a function with a single parameter where both the name and type have a dollar sign, so both the argument value and type are determined for each call at compile time.
-
-Because the parameter n is used to specify an array size, it must be an integer. In this first example call, the argument is an int value 3, so the function returns a pointer to an array of 3 ints. In this second example call, the argument is a u8 value 5, so the function returns a pointer to an array of 5 u8s.
-
-(Note, again, that an untyped integer is assumed to be an int when passed to a parameter with a compile time type.)
-
-[todo less artificial example? something more useful?]
-
-
-### where clauses
-
-In some cases, we may wish to restrict which compile time types and arguments are allowed for a function, and we can do this with a where clause. The where clause of a function has a compile time boolean expression which is evaluated for each call of the function. If the expression evaluates false, it triggers a compilation error. 
-
-For an example, we can add a where clause to the clamp function to ensure that the arguments are a numeric type. A call to clamp with int arguments is still OK because int is numeric, but a call with string arguments now fails because strings are not numeric, making the where clause here evaluate false.
-
-Another way to express restrictions of the parameters’ compile time types is with what is called specialization. For the most part, specialization is just shorthand syntax for what you otherwise can express in a where clause, but unlike a where clause, specialization can introduce new type parameters. 
-
-Here for example we have a sum function that returns the sum of all elements in a slice. To ensure that the argument is a slice of a numeric type, we use both specialization and a where clause. Specialization is denoted by a slash after the parameter type, followed by another type. In this case the type after the slash is a slice of $E, where E is an additional type parameter. We couldn’t just use T here because then we’d be saying that T must be a slice of itself, which isn’t logically possible. Instead, we introduce an additional type parameter so that it can be some other type. The additional type parameter is then used in the where clause to test if the slice element type is numeric.
-
-(By the way, ‘E’ stands for Element, as in ‘element of a slice’, so it is the conventional name in this situation.) 
-
-Without specialization, we could still express the same thing using just a where clause, but the code is then arguably harder to read.
-
-
-## polymorphism
-
-
-### any and typeid
-
-Odin has one more pointer type called any, which is like a rawptr but which additionally contains a typeid. What is a typeid?
-
-Well when you compile an Odin program, every unique type in your program is given a unique integer id called a typeid. In your code, you can get the typeid of any type by calling the builtin function typeid_of . In this example, we’re assigning the typeid of bool pointer to a typeid variable named t.
-
-So anyway, back to any. Every type in the language can be implicitly cast to any, and what we get back in this case is a value of type any that contains the typeid of int and the address of i.
-
-Note that this is actually a bit odd and inconsistent with the rest of the language, syntactically, because despite not using the address operator, the resulting any value contains the address of the int variable, not its value.
-
-The reason for this inconsistency is that it allows casting from a pointer to produce an any value with the same address but the typeid of the pointer type. So here when the pointer to i is cast to any, the resulting value has the typeid of int pointer instead of int. 
-
-Even more strange, we can actually cast an arbitrary expression into an any, and the compiler will allocate space on the call stack for the resulting value. Here the result of the expression 3 + i will be stored somewhere in the call stack frame, and the any value assigned to this variable ‘a’ will point to that location.
-
-
-In contrast, the address operator can only be used on variables and array indexing expressions, not just any expression. If we try to use the address operator on this expression to get an int pointer, we’ll just get a compilation error.
-
-
-
-Now that we’ve covered the concrete mechanisms of Odin’s type system, it’s useful to summarize how the various options in the language can enable polymorphism. This is an important topic because Odin diverges in this area from other, more widely-known languages, such as Java and C#. In these other languages, polymorphism is enabled through features like inheritance, interfaces, overloading, overriding, and generics, but Odin outright omits most of these features and offers inexact substitutes for the rest.
-
-First, though, what exactly does the umbrella term ‘polymorphism’ mean that it can encompass so much? Well wikipedia puts it succinctly: “...polymorphism allows a value type to assume different types.” Where otherwise a single thing would only expect one concrete type or behave in one way, it can be made to expect potentially multiple types and behave in different ways.
-
-Or another way to think of it: mechanisms of polymorphism allow us to express that a piece of code has variants that are similar but somehow different. In this sense, mechanisms of polymorphism enable abstraction building beyond what just plain functions and plain data types allow. Polymorphism gives us additional ways to generalize.
-Now, how much one should attempt to generalize—to abstract—in code is a very debatable question, but there clearly are some expressions of polymorphism that are useful to have in your toolset. One very common case is the need to express heterogenous data in a collection and then operate upon all elements of the collection. In C#, for example, we can create an array of Pets that may store any kind of Pet, whether a Cat or Dog, and then we can iterate over every element of the array and perform a common operation on every Pet regardless of its concrete type. This is enabled either by virtue of Cat and Dog inheriting from class Pet or by Cat and Dog implementing an interface Pet. Odin, however, lacks both inheritance and interfaces as language features, so we’re going to look at how this and similar problems can be solved in Odin by other means.
-
-
-
-## Compile time polymorphism
-
-When we look at the options for polymorphism in a language, it’s helpful to distinguish between compile time polymorphism and runtime polymorphism, not just because of how they are implemented but also because they serve different purposes.
-
-First we’ll look at compile time polymorphism, which serves two purposes: deduplicating code and overloading names.
-
-In Odin, compile time polymorphism is enabled through a few features: proc groups, parapoly functions, structs, and unions, and the using modifier which can be applied to fields of structs.
-
-
-polymorphism via proc groups
-
-Proc groups, very simply, are procedures that are defined not as a body of code but rather as a list of other procedures. At compile time, a call to a proc group dispatches to the procedure in its list that matches the number and types of arguments in the call.
-
-For example, here we have a proc group named sleep, which lists two procedures: sleep_cat and sleep_dog, which importantly take different types of argument. When we then call sleep with a Cat argument, it resolves at compile time as a call to sleep_cat, and likewise when we call sleep with a Dog argument, it resolves at compile time as a call to sleep_dog.
-
-Really then, proc groups just give us the stylistic and organizational convenience of overloading a procedure name so that we can use a single name at the call sites. Unlike overloading in other languages, however, we still have to give the individual overloads their own names.
-
-Again be clear that proc groups do not enable runtime dispatch: if we have, say, a union that can be either a Cat or Dog, then to invoke the appropriate sleep operation, we have to use a type switch and separately call sleep for each case.
-
-As we’ll see later, proper runtime dispatch will require other mechanisms.
-
-polymorphism via parapoly function
-
-Parametric polymorphic functions offer another kind of compile time polymorphism. Here this function sleep takes a single argument with a compile time type, so it effectively can be called with any kind of argument as long as the function can properly compile with that type. Because the function accesses a field called name on the argument, an acceptable argument must be a struct that has such a field. Here then, calls with Cat and Dog arguments are OK as long as the Cat and Dog structs have a .name field.
-
-Optionally, we can further narrow the set of allowed argument types so as to discourage erroneous uses of the function. Here we’re using a where clause to require that T must be a variant of the Pet union. Assuming Cat and Dog are variants of this union, then these two calls are still valid.
-
-However, a Pet value itself is not a variant of Pet, so we cannot call sleep with a Pet argument. 
-
-Like with proc groups, then, parametric polymorphic functions do not enable runtime dispatch. A unique variant of the function is generated for each unique argument type, but which specific variant gets called at each call site is fully locked in at compile time. 
-
-
 polymorphism via parapoly struct
 
 The most obvious use case for generic types are collections. Here for example we define a parapoly struct named Stack that is composed of a dynamic array of T. Odin has no concept of methods, but we can define parapoly procedures to implement the methods of this stack. The Make_stack procedure fills the role of a constructor which simply takes the desired type as argument, while push and pop both require a pointer to the stack. This is expressed as a type parameter which is specialized to be a Stack of type E, where E itself is another type parameter. As we said earlier, specialization is often just a shorthand for what can be expressed in a where clause, but in these cases, we want to enforce that the second argument of push and the return type of pop must match the element type of the stack argument, and the only way to express this is with specialization.
@@ -179,16 +244,13 @@ To define a function that operates on any kind of Pet, we again can define parap
 
 Now is this actually a good solution? Maybe not. Unlike proper inheritance in other languages, this solution doesn’t allow for runtime dispatch, nor does it allow for anything like method overriding.
 
-polymorphism via using in a struct
+### parameteric polymorphic unions
 
-Another way in Odin that you might try to approximate type inheritance is through simple composition. Here we’ve inverted the pattern of the prior example: instead of the Pet containing a more specific kind of Pet, the specific types of Pet themselves contain an instance of Pet. Effectively, both Cat and Dog can have their own unique data while sharing in common the data that defines a Pet. As we did with the parapoly struct, we can define a parapoly function that accepts any kind of pet as input. 
+Like structs, unions can also have compile time typeid and integer parameters, which effectively allows us to create variants from a single union definition.
 
-We can improve on this pattern a bit, at least stylistically, by adding the using modifier to the pet fields of our Cat and Dog structs. This simply makes the members of the Pet type directly accessible as if they were members of the Cat or Dog directly, even though in truth the layout of the data remains the same. With this change, the sleep function as we wrote it still works the same, but we can also access the name field directly on the argument, which remember will concretely be either a Cat or Dog. Again, this is just a stylistic affordance of the compiler: nothing about the data or executing code has actually changed here.
+Here we create a variable of type Pet, where the variant types are f32, int, and 4-string arrays. We can then assign any value of these types to the variable without an explicit cast.
 
-Alternatively, though, thanks to these using modifiers, the compiler will let us use a Cat or Dog as a proxy for a Pet value, so instead of making this function generic, we can define it to take a Pet argument directly but then pass a Cat or Dog as proxy for a Pet. In terms of actual effect, this is exactly the same as passing the pet field explicitly, but the shorthand is arguably a nice stylistic affordance.
-
-Be clear, though, that once again this is just a compile time trick that does nothing to support runtime dispatch.
-
+Just be clear, like with parametric polymorphic structs, each unique variant is a distinct type, and thus, say here, a Pet union with 6-string arrays as a variant type is distinct from a Pet union with 4-string arrays as a variant type.
 
 polymorphism via parapoly union
 
@@ -205,17 +267,61 @@ Outside of these cases, though, uses for parapoly unions are generally quite rar
 
 
 
+
+
+### polymorphism via using in a struct
+
+Another way in Odin that you might try to approximate type inheritance is through simple composition. Here we’ve inverted the pattern of the prior example: instead of the Pet containing a more specific kind of Pet, the specific types of Pet themselves contain an instance of Pet. Effectively, both Cat and Dog can have their own unique data while sharing in common the data that defines a Pet. As we did with the parapoly struct, we can define a parapoly function that accepts any kind of pet as input. 
+
+We can improve on this pattern a bit, at least stylistically, by adding the using modifier to the pet fields of our Cat and Dog structs. This simply makes the members of the Pet type directly accessible as if they were members of the Cat or Dog directly, even though in truth the layout of the data remains the same. With this change, the sleep function as we wrote it still works the same, but we can also access the name field directly on the argument, which remember will concretely be either a Cat or Dog. Again, this is just a stylistic affordance of the compiler: nothing about the data or executing code has actually changed here.
+
+Alternatively, though, thanks to these using modifiers, the compiler will let us use a Cat or Dog as a proxy for a Pet value, so instead of making this function generic, we can define it to take a Pet argument directly but then pass a Cat or Dog as proxy for a Pet. In terms of actual effect, this is exactly the same as passing the pet field explicitly, but the shorthand is arguably a nice stylistic affordance.
+
+Be clear, though, that once again this is just a compile time trick that does nothing to support runtime dispatch.
+
+
+
+
+
+```go
+// T must be a variant of the Pet union
+sleep :: proc(pet: $T) where intrinsics.type_is_variant_of(Pet, T) {      
+    fmt.println(pet.name, “is sleeping“)
+}
+
+
+sleep(Cat{})             // OK if Cat has .name
+sleep(Dog{})             // OK if Dog has .name
+
+pet: Pet
+sleep(pet)               // compile error Pet does not have .name
+```
+
+
+Here this function sleep takes a single argument with a compile time type, so it effectively can be called with any kind of argument as long as the function can properly compile with that type. Because the function accesses a field called name on the argument, an acceptable argument must be a struct that has such a field. Here then, calls with Cat and Dog arguments are OK as long as the Cat and Dog structs have a .name field.
+
+Optionally, we can further narrow the set of allowed argument types so as to discourage erroneous uses of the function. Here we’re using a where clause to require that T must be a variant of the Pet union. Assuming Cat and Dog are variants of this union, then these two calls are still valid.
+
+However, a Pet value itself is not a variant of Pet, so we cannot call sleep with a Pet argument. 
+
+Like with proc groups, then, parametric polymorphic functions do not enable runtime dispatch. A unique variant of the function is generated for each unique argument type, but which specific variant gets called at each call site is fully locked in at compile time. 
+
+
+
 ## Runtime polymorphism
 
+Whereas compile time polymorphism enables deduplication of code and overloading of names, runtime polymorphism enables us to have dynamically-typed data (including heterogeneous collections) and to operate upon this dynamically-typed data.
 
-Finally, now, what about runtime polymorphism? Whereas compile time polymorphism enables deduplication of code and overloading of names, runtime polymorphism enables us to have dynamically-typed data, including heterogeneous collections.
+Odin enables runtime polymorphism with a few features:
+
+- untyped pointers 
+- unions 
+- proc references
+
 
 The burden of static typing is that the compiler demands to know the specific type of every variable, every field, and every expression, but runtime polymorphism opens a door where a single compile time type may encompass a set of possible types at runtime.
 
-In Odin, dynamically-typed data can be expressed in one of two ways: 
 
-either with untyped pointers 
-or with unions. 
 
 While untyped pointers offer ultimate flexibility, they undermine any pretensions of static type safety, so generally unions are the preferred option.
 
@@ -232,6 +338,23 @@ Unlike all of our prior solutions using just compile time polymorphism, we can f
 Be clear, though, this still isn’t proper dynamic dispatch because the set of possible Pet types that can sleep is hardcoded in the typeswitch. With actual dynamic dispatch, the set of types is open for extension, even across program module boundaries.
 
 Another problem here, as mentioned, is that an untyped pointer is too unrestrictive: the data field of our Pet type can contain literally anything even though we actually only want it to contain Cats or Dogs or other valid subtypes of Pet. Potentially, then, users of this Pet struct may end up assigning inappropriate values to the data field, and the compiler will not identify these errors.
+
+
+### any
+
+Odin has one more pointer type called `any`, which is like a `rawptr` but which additionally contains a `typeid`.
+
+Every type in the language can be implicitly cast to any, and what we get back in this case is a value of type any that contains the typeid of int and the address of i.
+
+Note that this is actually a bit odd and inconsistent with the rest of the language, syntactically, because despite not using the address operator, the resulting any value contains the address of the int variable, not its value.
+
+The reason for this inconsistency is that it allows casting from a pointer to produce an any value with the same address but the typeid of the pointer type. So here when the pointer to i is cast to any, the resulting value has the typeid of int pointer instead of int. 
+
+Even more strange, we can actually cast an arbitrary expression into an any, and the compiler will allocate space on the call stack for the resulting value. Here the result of the expression 3 + i will be stored somewhere in the call stack frame, and the any value assigned to this variable ‘a’ will point to that location.
+
+
+In contrast, the address operator can only be used on variables and array indexing expressions, not just any expression. If we try to use the address operator on this expression to get an int pointer, we’ll just get a compilation error.
+
 
 polymorphism via a union
 
