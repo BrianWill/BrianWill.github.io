@@ -66,7 +66,7 @@ sleep(Dog{})       // one Dog argument, so invokes sleep_dog
 
 Proc groups give us the stylistic and organizational convenience of overloading a procedure name so that we can use a single name at the call sites. Unlike overloading in other languages, however, we still have to give the individual overloads their own names.
 
-### Parametric polymoprhic procs (generic functions)
+### Parametric polymorphic procs (generic functions)
 
 *Parametric polymorphic procedures* are Odin's semi-equivalent of generic functions in other languages. A procedure is parameteric polymorphic if it has any parameters whose arguments and/or types are fixed for each call at compile time.
 
@@ -156,7 +156,7 @@ assert(str_arr == [5]{"hi", "hi", "hi", "hi", "hi"})
 > Again, separate versions of a procedure are compiled for each unique call signature, so in the above example, the two calls to `repeat_five` invoke different code: one for which T is a bool and one for which T is a string.
 
 > [!WARNING] 
-> Don't be confused that we used "T" as the name for the `typeid` parameter name earlier but here now use "T" as the name for the parameter type itself. In the former case, the type "T" is determined by the *`typeid` value* passed as argument; in the latter case, the type "T" is determined by the *type* of the passed argument.
+> Don't be confused that we used "T" as the name for the `typeid` parameter name earlier but here now use "T" as the name for the parameter type itself. In the former case, the type "T" is determined by the `typeid` value passed as argument; in the latter case, the type "T" is determined by the type of the passed argument.
 
 The compile time type establisehd by a parameter can be used as the type of subsequent parameters in the parameter list:
 
@@ -372,13 +372,8 @@ p = p2
 // compile error: Pet itself is not a type
 pet: Pet  
 ```
-
-Compared to parapoly structs, the use cases for parapoly unions are less obvious aside from two:
-
-- First, a Result type, as it’s usually called, is a way of expressing the result of an operation that might not be available because an error occurred. Here this Result union is either a value of type parameter T or an Error. By virtue of the type parameter, we can define Result just once instead of separately for every possible kind of result we want to use. In practice, however, Odin code generally won’t make use of a Result type because the Odin convention is to separately return errors from multi-return functions instead of mixing errors with other values in a union.
-- Probably, then, the only real use case for parapoly unions in Odin is for cases where a union includes other parapoly types. Here this Pet union includes variant types Dog and Cat which themselves are parapoly structs, and so in order to pass on type arguments to these variants, the union itself must have type parameters.
-
-Outside of these use cases, parapoly unions are generally quite rare.
+> [!NOTE]
+> The main use case for a parapoly union is simply to support parapoly structs with type params in a union: if a variant type in a union has type params, then the union itself must have type params so that its type params can be passed to the variant.
 
 
 ### Struct fields with the `using` modifier
@@ -431,142 +426,262 @@ i: int = c.y
 ```
 
 
-
-Another way in Odin that you might try to approximate type inheritance is through simple composition. Here we’ve inverted the pattern of the prior example: instead of the Pet containing a more specific kind of Pet, the specific types of Pet themselves contain an instance of Pet. Effectively, both Cat and Dog can have their own unique data while sharing in common the data that defines a Pet. As we did with the parapoly struct, we can define a parapoly function that accepts any kind of pet as input. 
-
-We can improve on this pattern a bit, at least stylistically, by adding the using modifier to the pet fields of our Cat and Dog structs. This simply makes the members of the Pet type directly accessible as if they were members of the Cat or Dog directly, even though in truth the layout of the data remains the same. With this change, the sleep function as we wrote it still works the same, but we can also access the name field directly on the argument, which remember will concretely be either a Cat or Dog. Again, this is just a stylistic affordance of the compiler: nothing about the data or executing code has actually changed here.
-
-Alternatively, though, thanks to these using modifiers, the compiler will let us use a Cat or Dog as a proxy for a Pet value, so instead of making this function generic, we can define it to take a Pet argument directly but then pass a Cat or Dog as proxy for a Pet. In terms of actual effect, this is exactly the same as passing the pet field explicitly, but the shorthand is arguably a nice stylistic affordance.
-
-Be clear, though, that once again this is just a compile time trick that does nothing to support runtime dispatch.
-
-
-
-
-
-```go
-// T must be a variant of the Pet union
-sleep :: proc(pet: $T) where intrinsics.type_is_variant_of(Pet, T) {      
-    fmt.println(pet.name, “is sleeping“)
-}
-
-
-sleep(Cat{})             // OK if Cat has .name
-sleep(Dog{})             // OK if Dog has .name
-
-pet: Pet
-sleep(pet)               // compile error Pet does not have .name
-```
-
-
-Here this function sleep takes a single argument with a compile time type, so it effectively can be called with any kind of argument as long as the function can properly compile with that type. Because the function accesses a field called name on the argument, an acceptable argument must be a struct that has such a field. Here then, calls with Cat and Dog arguments are OK as long as the Cat and Dog structs have a .name field.
-
-Optionally, we can further narrow the set of allowed argument types so as to discourage erroneous uses of the function. Here we’re using a where clause to require that T must be a variant of the Pet union. Assuming Cat and Dog are variants of this union, then these two calls are still valid.
-
-However, a Pet value itself is not a variant of Pet, so we cannot call sleep with a Pet argument. 
-
-Like with proc groups, then, parametric polymorphic functions do not enable runtime dispatch. A unique variant of the function is generated for each unique argument type, but which specific variant gets called at each call site is fully locked in at compile time. 
-
-
-
 ## Runtime polymorphism
 
 Whereas compile time polymorphism enables deduplication of code and overloading of names, runtime polymorphism enables us to have dynamically-typed data (including heterogeneous collections) and to operate upon this dynamically-typed data.
 
 Odin enables runtime polymorphism with a few features:
 
-- untyped pointers 
 - unions 
+- untyped pointers
 - proc references
 
+We've already covered unions and two kinds of untyped pointer (`rawptr`, `uintptr`) (see [Data Types in Odin](odin_data_types.md)), but we haven't yet introduced the third kind of untyped pointer, the `any` type, nor have we introduced proc references. We'll explain how these new things work before discussing how they can enable runtime polymorphism.
 
-The burden of static typing is that the compiler demands to know the specific type of every variable, every field, and every expression, but runtime polymorphism opens a door where a single compile time type may encompass a set of possible types at runtime.
+### The `any` type
 
+Odin has another kind of untyped pointer called `any`, which is like a `rawptr` but which additionally contains a `typeid`. Every type in the language can be implicitly cast to `any`:
 
+```go
+a: any
+i: int
 
-While untyped pointers offer ultimate flexibility, they undermine any pretensions of static type safety, so generally unions are the preferred option.
+a = i        // the any value has a typeid of int and points to i
+```
 
-When it comes time to use dynamically-typed data, code very often needs to perform runtime type checks (such as Odin’s type assertions and type switches). This suffices for most purposes, but in more advanced cases, we may need one more mechanism: procedure references, which are Odin’s analogue of function pointers. As we’ll see later, procedure references can help us fully simulate the inheritance and interface features of other languages which Odin does not directly support.
+> [!NOTE]
+> The cast of `i` to `any` is a bit syntactically inconsistent with the rest of the language because, despite not using the address operator, the resulting `any` value contains the address of the int variable, not its value.
 
-First, though, we’ll discuss how untyped pointers and unions can represent dynamically-typed data.
+When we cast a pointer expression to `any`, the result holds the `typeid` of the pointer type and holds the same address as the pointer (rather than the address of the pointer itself):
 
-polymorphism via untyped pointers
+```go
+a: any
+i: int
 
-Once again we’ll consider the use case of a Pet type with pseudo-subtypes Cat and Dog. If our Pet struct contains a field data of type any, then it can contain any kind of Pet, whether a Cat or Dog, or in fact anything whatsoever.  When we now implement operations on our Pet type, we can use a type switch to handle all the possible values of the data field, like this sleep function that can process both Cats and Dogs.
+a = &i       // the any value has a typeid of ^int and points to i
+```
 
-Unlike all of our prior solutions using just compile time polymorphism, we can finally create collections that contain a heterogeneous mix of any kind of Pet and process them based on their subtype. Here we invoke sleep on all Pets in this array, which can contain any mix of Cats and Dogs or other Pets.
+Even more odd, a whole expression can be cast to `any`, in which case the `any` value holds a pointer into the stack frame where the expression result is stored:
 
-Be clear, though, this still isn’t proper dynamic dispatch because the set of possible Pet types that can sleep is hardcoded in the typeswitch. With actual dynamic dispatch, the set of types is open for extension, even across program module boundaries.
+```go
+a: any
+i: int
 
-Another problem here, as mentioned, is that an untyped pointer is too unrestrictive: the data field of our Pet type can contain literally anything even though we actually only want it to contain Cats or Dogs or other valid subtypes of Pet. Potentially, then, users of this Pet struct may end up assigning inappropriate values to the data field, and the compiler will not identify these errors.
+a = 3 + i          // typeid of int and points into the stack frame
 
-
-### any
-
-Odin has one more pointer type called `any`, which is like a `rawptr` but which additionally contains a `typeid`.
-
-Every type in the language can be implicitly cast to any, and what we get back in this case is a value of type any that contains the `typeid` of int and the address of i.
-
-Note that this is actually a bit odd and inconsistent with the rest of the language, syntactically, because despite not using the address operator, the resulting any value contains the address of the int variable, not its value.
-
-The reason for this inconsistency is that it allows casting from a pointer to produce an any value with the same address but the `typeid` of the pointer type. So here when the pointer to i is cast to any, the resulting value has the `typeid` of int pointer instead of int. 
-
-Even more strange, we can actually cast an arbitrary expression into an any, and the compiler will allocate space on the call stack for the resulting value. Here the result of the expression 3 + i will be stored somewhere in the call stack frame, and the any value assigned to this variable ‘a’ will point to that location.
-
-
-In contrast, the address operator can only be used on variables and array indexing expressions, not just any expression. If we try to use the address operator on this expression to get an int pointer, we’ll just get a compilation error.
-
-
-polymorphism via a union
-
-The better solution, in most cases, is to use a union type instead of an untyped pointer. Here now the data field is this Pet_Data union type, which has variants Cat and Dog. If the Cat and Dog types are significantly large, we might prefer to instead define its variants as pointer to Cat and pointer to Dog. Either way, we can still use a typeswitch to handle the different kinds of Pet, but now the compiler can assure us that this data field will only ever be a Cat or Dog rather than just anything.
-
-One more possible solution is that we flip the composition: rather than a Pet struct containing Cat or Dog data, Cat and Dog structs can contain Pet data. When we use a type switch now, we switch on the Pet value itself because Pet is directly the union with variant types Cat or Dog.
-
-So if unions are so great, why would we ever use untyped pointers instead? Well it’s important to note that a union’s set of variants is fixed at compile time and therefore the importers of a package cannot add variants to the package’s unions. For example, if a dependency we’re importing defines a Pet union, we cannot add our own variants of Pet.
-
-The other issue with unions is that we can only process their values with type asserts and type switches, both of which are hardcoded, in the sense that they cannot be extended: for example, if a function in my package uses a typeswitch, importers of my package cannot add new cases to the typeswitch.
-
-Ultimately, the only way in Odin to have truly dynamic data is to use untyped pointers.
+// compile error: 
+// unlike a cast to `any`, the & operator only works directly
+// on variables, struct fields, and array indexing expressions
+ip := &(3 + i) 
+```
 
 
-polymorphism via function pointers
+### Proc references
 
-To process fully dynamic data, we need proc references, which are Odin’s equivalent of C function pointers. 
+A proc reference is simply what other languges would call a function pointer:
 
-Let’s say that we again have a Pet struct with two subtypes, Cat and Dog, which both embed a Pet struct with the using modifier. To allow each instance of pet to customize how it performs its sleep operation, we’ll add a sleep field to Pet which is a proc ref. The proc requires a parameter to receive the pet data, and because the pet might be a Cat, Dog, or any other kind of Pet, the parameter must be of type any.
+```go
+add :: proc(a: int, b: int) -> int {
+    return a + b
+}
 
-When we then define sleep functions for cat and dog, we expect them to only be called with their respective type of pet, so first thing, these functions both type assert that their parameters are actually Cats and Dogs. We could try to handle the error case for these type asserts, but we actually want to panic in the event of such errors anyway. We should just ensure in our code that cat_sleep is only called with Cat arguments and dog_sleep is only called with Dog arguments.
+f: proc(a: int, b:int) -> int
+f = add
+x := f(3, 5)   // same as calling add
+```
 
-So here now, when we create a cat value, we assign its sleep field the appropriate proc reference to the cat_sleep function, and so then we can invoke cat_sleep by name or via the sleep field.
+### Heterogenous collections
 
-Likewise for Dogs.
+The preferred way to represent collections containing mixed types is with unions:
+
+```go
+Cat :: struct{}
+Dog :: struct{}
+
+Pet :: union { Cat, Dog }
 
 
-So now we finally have a form of dynamic function call because calling a proc reference invokes the function that it currently stores.
+pets: [10]Pet
 
-However, our Pet data itself is not dynamic at all, and so we still can’t in this arrangement create a heterogeneous collection of Pets on which we could invoke each pet’s respective sleep operation. If for example we create a Pet array, that array can only contain Pet structs, not Cat or Dog structs.
+for p in pets {
+    switch p in pet {
+    case Cat:
+        sleep_cat(p)
+    case Dog:
+        sleep_dog(p)
+    }
+}
+```
 
-If we use a union of the pet types, that allows us to create a heterogenous collection of pets, but it creates two new problems:
+> [!TIP]
+> When dealing with larger variant types, it may be preferable to include pointers in the union instead of the type itself, `e.g.` `union { ^Cat, ^Dog }` instead of `union { Cat, Dog }`. On the other hand, using pointers introduces the complication of managing the referenced memory.`    
 
-First, the set of Pet_Union variants is fixed in this definition, which is fine as long as you can freely edit the union definition, but that is something which downstream code that imports this package cannot do.
 
-Second, there’s no way to access the sleep proc references of the pets without first doing a type assert or type switch, which defeats our whole purpose.
+### Extensible interfaces
 
-Instead of a union then, we need a struct, which we’ll call Pet_Wrapper, that stores any kind of Pet while also separately storing its sleep proc ref. Also as a convenience, we’ll define a function that takes any kind of Pet and creates a Pet_Wrapper.
+As a solution for runtime polymorphism, unions have two limitations:
 
-Now we can create a heterogeneous collection of pets which, unlike the union solution, is open for extension with new types of Pet, and which allows us to invoke the sleep operation without a type assert or type switch.
+- A union is not extensible: you cannot add additional variants to a union without redefining the original definition. This makes it impossible to extend a union brought in from a library whose source you cannot edit (or prefer not to edit).
+- The variants held in a union value can only be accessed *via* type switches or type asserts, `e.g.` in the example above, accessing the value held in a Pet required a type switch with explicit cases for Cat and Dog. So even if a union type could be extended with new variants, all existing code that uses the type would have to be edited to account for the new variants.
 
-Here we create a Cat and Dog, which we wrap and store in an array, and then we can invoke sleep on every pet in the array.
+Runtime polymorphism also requires a way to perform dynamic dispatch, which is not provided by proc groups: 
 
-So this finally is working dynamic dispatch in Odin. It’s certainly not as convenient as the inheritance and interface mechanisms built into other languages, but it does solve the problem. So you might ask, why doesn’t Odin support these features directly? Well the philosophy is that these things are not actually commonly needed and so shouldn’t be presented as a default in the language. In the large majority of cases where you might use dynamic dispatch, the code will be simpler and better performing if you don’t.
+```go
+Cat :: struct{}
+Dog :: struct{}
 
-Before we end, one quick tweak of this dynamic dispatch pattern:
+Pet :: union { Cat, Dog }
 
-For cases where our Pets have many possible operations beyond just sleep, our structs would get bloated if they have to store many proc references. So rather than store a bunch of individual proc refs, we can instead group all of them into another struct which we then store by pointer. In this example, the sleep proc reference is moved into a Pet_Procs struct, which is stored as a pointer in the Pet struct. If we want additional operations for our pets, we then add additional proc reference fields in Pet_Procs. 
+sleep_cat :: proc(cat: Cat) { /* ... */ }
+sleep_dog :: proc(dog: Dog) { /* ... */ }
+sleep_group :: proc { sleep_cat, sleep_dog }
 
-For each pet type, we’ll create a global Pet_Procs containing all the operations for that type of Pet…
+pet: Pet = Dog{}
 
-…and when we create our Cat and Dog instances, we assign pointers of these globals to their pet_procs fields.
+switch p in pet {
+case Cat:
+    // compile time type of p is Cat, so sleep_group
+    // resolves at compile time to sleep_cat
+    sleep_group(p)
+case Dog:
+    // compile time type of p is Dog, so sleep_group
+    // resolves at compile time to sleep_dog
+    sleep_group(p)
+}
+```
 
-The Pet_Wrapper now includes a Pet_Procs pointer, and the invocation code is slightly more verbose, but it’s still the same idea, just now the pet types can have all of their operation proc references grouped into one struct.
+Parapoly procs don't provide runtime dispatch either:
+
+```go
+// a parapoly function where T must be a variant of Pet
+para_sleep :: proc(pet: $T) where intrinsics.type_is_variant_of(Pet, T) { 
+    // a 'when' code block is included in the compiled code only if true
+    when T == Cat {
+        fmt.println("cat")
+    }
+    when T == Dog {
+        fmt.println("dog")
+    }
+}
+
+// resolves at compile time to the specialization where T is Dog
+para_sleep(Dog{})   
+```
+
+We can get closer to actual runtime dispatch with proc refs:
+
+```go
+Cat :: struct{
+    sleep_proc : proc(Cat)
+}
+Dog :: struct{
+    sleep_proc : proc(Dog)
+}
+Pet :: union { Cat, Dog }
+
+// psuedo-methods for each Pet type
+sleep_cat :: proc(c: Cat) {}
+sleep_dog :: proc(d: Dog) {}
+
+dog : = Dog{ sleep_proc = sleep_dog }
+cat : = Cat{ sleep_proc = sleep_cat }
+
+pet: Pet = dog
+
+// we cannot access the .sleep_proc field
+// without using a type switch (or type asserts), so we
+// are still dispatching on type at compile time, not runtime
+switch p in pet {
+case Cat:
+    p.sleep_proc(p)
+case Dog:
+    p.sleep_proc(p)
+}
+```
+
+Even if we create a parapoly proc, the dispatch on a union value's type still happens at compile time:
+
+```go
+// a parapoly function where T must be a variant of Pet
+// and must have a field .sleep_proc that is a proc with a parameter of type T
+sleep_para :: proc(pet: $T) where intrinsics.type_is_variant_of(Pet, T) { 
+    pet.sleep_proc(pet)
+}
+
+// at compile time, sleep_para requires a Cat or Dog argument, not a Pet,
+// so we still need a type switch (or type asserts)
+switch p in pet {
+case Cat:
+    sleep_para(pet)
+case Dog:
+    sleep_para(pet)
+}
+```
+
+For actual dynamic dispatch, we need not just proc refs but also untyped pointers. Because the runtime type of the pointer's referant must be tracked, it makes sense to use an `any` pointer:
+
+```go
+Pet :: struct {
+    sleep_proc: proc(Pet)
+    data: any    
+}
+
+Dog :: struct{}
+
+sleep_dog :: proc(pet: any) {
+    dog := pet.(Dog)
+    // ...
+}
+
+pet : = Pet{ 
+    sleep_proc = sleep_dog, 
+    data = Dog{} 
+}
+
+// dynamically calls sleep_dog
+pet.sleep_proc(pet)
+```
+
+Effectively, this pattern establishes an extensible Pet interface: a struct can be said to implement Pet if there is a corresponding `sleep_` proc with the correct signature, *e.g.* a Cat struct implements interface Pet if it has a corresponding `sleep_cat`.
+
+> [!NOTE]
+> The method-call syntax familiar from other languages, `x.y()`, has no special meaning in Odin. To invoke `x.y()` simply invokes the proc ref stored in field 'y' of 'x', but no arguments are implicitly passed. Hence, in our example above, the pet variable is passed explicitly.
+
+> [!NOTE]
+> Despite its name being so short and convenient, the `any` type is not indented to be commonly used except in a handful of niche use cases (including this interface pattern). In particular, you should prefer using a union over using `any` wherever possible.
+
+For an interface that has multiple psuedo-methods proc refs, it is convenient to bundle the proc refs into a single struct:
+
+```go
+Dog :: struct{}
+
+// defines the proc refs of the Pet interface
+Pet_Procs :: struct {
+    sleep: proc(any)
+    eat: proc(any, int) -> int
+}
+
+Pet :: struct {
+    procs: Pet_Procs
+    data: any    
+}
+
+dog_procs :: Pet_Procs{
+    sleep = proc(pet: any) {
+        dog := pet.(Dog)
+        // ...
+    },
+    eat = proc(pet: any, i: int) -> int {
+        dog := pet.(Dog)
+        // ...
+    },
+}
+
+pet := Pet{ 
+    procs = dog_procs, 
+    data = Dog{} 
+}
+
+// dynamically calls dog_procs.eat
+i: int = pet.procs.eat(pet, 4)
+```
