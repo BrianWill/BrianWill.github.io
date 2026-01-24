@@ -6,35 +6,36 @@
 
 # Programming Introduction
 
-- [Programming Fundamentals](./programming_fundamentals.md)
-- [Web Programming](./web_programming.md)
+- [Programming Fundamentals](./fundamentals/programming_fundamentals.md)
+- [Web Programming](./fundamentals/web_programming.md)
 
 ---
 
-# Programming Languages
+# Programming Languages and Tools
 
-- [Programming Languages](./programming_languages.md)
-- [Data Types in Odin](./odin_data_types.md)
-- [Polymorphism in Odin](./odin_polymorphism.md)
+- [Programming Languages](./languages/programming_languages.md)
+- [Data Types in Odin](./languages/odin/odin_data_types.md)
+- [Polymorphism in Odin](./languages/odin/odin_polymorphism.md)
 
 ---
 
-# Programming Tools
+# Programming Tools and APIs
 
-- [Jujutsu Version Control](./jujutsu.md)
+- [Jujutsu Version Control](./tools/jujutsu.md)
 
 ---
 
 # Game Programming
 
 - [Transforms]()
-- [Open GL](./open_gl.md)    
+- [Open GL](./games/open_gl.md)  
+- [Games - Mics](./games/misc.md)  
 
 ---
 
 # Polemics
 
-- [Object-Oriented Programming is Bad](./oop_is_bad.md)
+- [Object-Oriented Programming is Bad](./polemics/oop_is_bad.md)
 
 ---
 
