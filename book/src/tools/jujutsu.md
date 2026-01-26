@@ -1,6 +1,6 @@
 # Introduction to Jujutsu Version Control
 
-*This text is a supplement to a [video about the Jujutsu version control system]().*
+*This text is a supplement to a [video about the Jujutsu version control system](https://youtu.be/mM4nrhDenC8).*
 
 ## Pros and cons
 
