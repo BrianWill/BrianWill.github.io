@@ -1,0 +1,7 @@
+nav .chapter-item strong[aria-hidden="true"] {
+  display: none;
+}
+
+nav .chapter-item > .chapter-link-wrapper > a::before {
+  content: "📄 ";
+}

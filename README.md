@@ -1,1 +1,1 @@
-Repo for my book of notes. See [here]()
+Repo for my book of notes.

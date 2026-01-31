@@ -1,6 +1,7 @@
 # Summary
 
 [About](./about.md)
+- [Blog 2026](./blog_2026.md)
 
 ---
 
@@ -27,9 +28,9 @@
 
 # Game Programming
 
-- [Transforms]()
+- [Transforms](./games/transforms.md)
 - [Open GL](./games/open_gl.md)  
-- [Games - Mics](./games/misc.md)  
+- [Games - Misc](./games/misc.md)  
 
 ---
 
