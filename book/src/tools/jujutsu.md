@@ -32,10 +32,6 @@ The JJ model differs from Git in several ways =
 - Instead of branches, JJ has what it calls **bookmarks**, though they are basically the same thing. The main difference is that JJ has no concept of a 'current bookmark', and bookmarks do not automatically advance the way Git branches do. It’s common in JJ to locally track different branches of work by change ids rather than with bookmarks, so bookmarks are mostly used in JJ just to sync with remote branches. If a bookmark that tracks a remote branch somehow ends up out of sync with the remote branch, say because the bookmark was manually moved, then the bookmark becomes conflicted. These conflicts can be resolved by simply getting the bookmark and its tracked remote back in sync.
 - Whereas a Git commit can have at most two parents, a JJ commit can have **any number of parents**. More than two parents can be useful for cases where you want to do a multi-way merge = instead of having to merge multiple pairs, you can just merge everything together directly in one operation. Along with JJ’s conflict meta-data, this can help reduce the number of conflicts you must manually resolve.
 
-## What is a "change"?
-
-When we talk about a “change” in JJ, it’s not always clear if we’re talking about a change id or if we’re talking about a commit that has a particular commit id. More confusingly, the term “change” can also refer to the actual file content changes of a commit relative to its parents, and the JJ documentation is not always clear about this distinction. These ambiguities would have been avoided if “change ids” were instead named something else, like perhaps, “revision ids”, but as it is, we have to be careful when we say “change”.
-
 ## Demo of basic operations
 
 ```
@@ -84,3 +80,36 @@ To create a commit, we simply make changes to our working copy and then run JJ. 
 - `jj operation log` = show the operations log
 - `jj operation restore` = restore repo state to the state immediately after a particular operation
 - `jj operation undo` = restore repo state to the state immediately before the last operation
+
+## Common points of confusion
+
+### What is a change?
+
+When we talk about a “change” in JJ, it’s not always clear if we’re talking about a change id or if we’re talking about a commit that has a particular commit id. More confusingly, the term “change” can also refer to the actual file content changes of a commit relative to its parents, and the JJ documentation is not always clear about this distinction. These ambiguities would have been avoided if “change ids” were instead named something else, like perhaps, “revision ids”, but as it is, we have to be careful when we say “change”.
+
+### Incremental commits are replacements, not descendants
+
+In typical Git usage, people typically create incremental commits as they work on a branch, and this creates a chain of parentage: each new commit is a child of the prior.
+
+In JJ, incrementally commiting dirty working changes produces commits that logically replace the prior commit in the history: the new commit has the same changeid and parents as the prior commit, and the prior commit becomes hidden.
+
+You can always recover hidden commits, so you shouldn't worry about unrecoverable state, but to create a sort of 'checkpoint' in your development, the usual practice is to run the `jj new` command. This will create a new commit that:
+
+1. has a new, random changeid
+1. is a child of the prior commit
+1. is empty (represents no file changes relative to the parent)
+
+In a sense, this marks in your histroy that you are starting on the next phase of development, such as fixing the next bug or implementing the next feature.
+
+> [!NOTE]
+> Pretty much all JJ commands create 'replacement' commits rather than extend the chain of parentage. The exceptions are the commands that create new changeids: `jj new` and `jj split`.
+
+### Restoring old operations does not delete log entires or commits
+
+When restoring an old repo state with the `jj operation restore` or `jj undo` commands, the visibility of relevant commits may be toggled, and these commands are appended to the operation log.
+
+However, the only way operation log entries or commits get truly deleted from a repo is by running the `jj util gc` command. This command deletes entries from the operations log that are older than a certain threshold (default of 2 weeks) and also deletes the commits that were only relevant to the pruned entries.
+
+## The current empty commit gets automatically hidden when switching away
+
+If your current commit is empty (meaning it represents no file changes relative to its parents), JJ will hide the commit if you switch away to another commit. This may happen not just if you run `jj edit` but if you run any command that switches you to a different current commit.

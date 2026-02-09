@@ -478,7 +478,7 @@ ip := &(3 + i)
 
 ### Proc references
 
-A proc reference is simply what other languges would call a function pointer:
+A proc reference is simply what other languages would call a function pointer:
 
 ```go
 add :: proc(a: int, b: int) -> int {
@@ -648,7 +648,7 @@ Effectively, this pattern establishes an extensible Pet interface: a struct can 
 > The method-call syntax familiar from other languages, `x.y()`, has no special meaning in Odin. To invoke `x.y()` simply invokes the proc ref stored in field 'y' of 'x', but no arguments are implicitly passed. Hence, in our example above, the pet variable is passed explicitly.
 
 > [!NOTE]
-> Despite its name being so short and convenient, the `any` type is not indented to be commonly used except in a handful of niche use cases (including this interface pattern). In particular, you should prefer using a union over using `any` wherever possible.
+> Despite its name being so short and convenient, the `any` type is not intended to be commonly used except in a handful of niche use cases (including this interface pattern). In particular, you should prefer using a union over using `any` wherever possible.
 
 For an interface that has multiple psuedo-methods proc refs, it is convenient to bundle the proc refs into a single struct:
 
