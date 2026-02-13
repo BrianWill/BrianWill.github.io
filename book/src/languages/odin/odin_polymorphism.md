@@ -16,9 +16,9 @@ Wikipedia defines polymorphism succinctly:
 
 Where otherwise a single thing could only be one concrete type or behave in one way, polymorphism allows a thing to potentially vary in type and behave in different ways.
 
-Another way to think of it: mechanisms of polymorphism allow us to express that a piece of code has variants that are similar but somehow different. In this sense, mechanisms of polymorphism enable abstraction building beyond what just plain functions and plain data types allow, *i.e.* polymorphism gives us additional ways to generalize.
+Another way to think of it: mechanisms of polymorphism allow us to express that a piece of code has variants that are similar but somehow different. In this sense, mechanisms of polymorphism enable abstraction building beyond what just plain procedures and plain data types allow, *i.e.* polymorphism gives us additional ways to generalize.
 
-Now, how much one *should* attempt to generalize, to abstract, in code is a very debatable question, but polymorphism is useful to have in your toolset. One very common case is the need to express heterogenous data in a collection and then operate upon all elements of the collection. In C#, for example, we can create an array of Pets that may store any kind of Pet, whether a Cat or Dog, and then we can iterate through the collection and perform a common operation on every Pet regardless of its concrete type:
+Now, how much one *should* attempt to abstract is a very debatable question, but polymorphism is useful to have in your toolset. In particular, we very commonly need the ability to store heterogenous data in a collection and then also need the ability to operate upon these heterogenous elements when iterating the collection. In C#, for example, we can create an array of Pets that may store any kind of Pet, whether a Cat or Dog, and then we can iterate through the collection and perform a common operation on every Pet regardless of its concrete type:
 
 ```csharp
 // C#
@@ -31,7 +31,7 @@ foreach (var p in pets) {
 }
 ```
 
-This is enabled either by virtue of Cat and Dog inheriting from class Pet *or* by Cat and Dog implementing an interface Pet. Odin, however, lacks inheritance, interfaces, and other common polymorphism-related language features. So we'll look at how look at how this and similar problems can be solved in Odin by other means.
+This is enabled either by virtue of Cat and Dog inheriting from class Pet *or* by Cat and Dog implementing an interface Pet. Odin, however, lacks inheritance, interfaces, and other common polymorphism-related language features. So we'll look at how this and similar problems can be solved in Odin by other means.
 
 
 ## Compile time polymorphism
@@ -43,15 +43,15 @@ It’s helpful to distinguish between ***compile time* polymorphism** and ***run
 
 In Odin, compile time polymorphism is enabled through a few features:
 
-- proc groups
-- parametric polymorphic procs
+- procedure groups
+- parametric polymorphic procedures
 - parametric polymorphic structs
 - parametric polymorphic unions
 - the `using` modifier for struct fields
 
-### Proc groups
+### Procedure groups
 
-*Proc groups*, very simply, are procedures that are defined not as a body of code but rather as a list of other procedures. At compile time, a call to a proc group dispatches to the procedure in its list that matches the number and types of arguments in the call.
+*Procedure groups*, very simply, are procedures that are defined not as a body of code but rather as a list of other procedures. At compile time, a call to a procedure group dispatches to the procedure in its list that matches the number and types of arguments in the call.
 
 ```go
 sleep_cat :: proc(cat: Cat) { /* ... */ }
@@ -66,11 +66,11 @@ sleep(Dog{})       // one Dog argument, so invokes sleep_dog
 
 Proc groups give us the stylistic and organizational convenience of overloading a procedure name so that we can use a single name at the call sites. Unlike overloading in other languages, however, we still have to give the individual overloads their own names.
 
-### Parametric polymorphic procs (generic functions)
+### Parametric polymorphic procedures (generic functions)
 
 *Parametric polymorphic procedures* are Odin's semi-equivalent of generic functions in other languages. A procedure is parameteric polymorphic if it has any parameters whose arguments and/or types are fixed for each call at compile time.
 
-#### Parameters with compile time arguments
+#### Parameters that require compile time arguments
 
 A parameter which requires a compile time expression argument is denoted by a `$` prefix on the parameter name: 
 
@@ -105,15 +105,15 @@ mul :: proc($val: f32) -> f32 {
 }
 ```
 
-To get a similar effect as what other languages call a type parameter, we can use `typeid` parameters that receive compile time arguments. 
+To get a similar effect as what other languages call a type parameter, we can use `typeid` parameters that require compile time arguments: 
 
 > [!NOTE]
-> Every unique type in your program is given a unique integer id called a `typeid`. Type names themselves are compile time `typeid` expressions, and the builtin function `typeid_of` returns the `typeid` of its single argument's type, *e.g.* `typeid_of(Cat{})` returns the `typeid` of Cat.
+> Every unique type in your program is given a unique integer id called a `typeid`. Type names themselves are compile time `typeid` expressions, and the builtin procedure `typeid_of` returns the `typeid` of its single argument's type, *e.g.* `typeid_of(Cat{})` returns the `typeid` of Cat.
 
 ```go
 // (slightly simplified version of runtime.new)
 // 'T' is a compile time typeid expression, so it can be used like a type name
-// Effectively, this one function can return any kind of pointer.
+// Effectively, this one procedure can return any kind of pointer.
 my_new :: proc($T: typeid) -> (^T, runtime.Allocator_Error) {
    return runtime.new_aligned(T, align_of(T))
 }
@@ -128,9 +128,9 @@ bool_ptr, _ := my_new(bool)
 > [!NOTE]
 > For a parameteric polymorphic procedure, separate versions of procedure are compiled for each unique call signature. For instance, in the above example, the two calls to `my_new` actually invoke different code: one for which T is an int and one for which T is a bool.
 
-#### Parameters with compile time types
+#### Parameters with caller-determined types
 
-When a parameter’s *type* is prefixed with a dollar sign, that indicates that the parameter’s *type* is determined at compile time by the type of the argument:
+When a parameter’s *type* is prefixed with a dollar sign, that indicates that the parameter’s *type* is determined at compile time by the type of the argument from the caller:
 
 ```go
 // the arguments to 'val' can be a runtime expression of any type, 
@@ -158,13 +158,13 @@ assert(str_arr == [5]{"hi", "hi", "hi", "hi", "hi"})
 > [!WARNING] 
 > Don't be confused that we used "T" as the name for the `typeid` parameter name earlier but here now use "T" as the name for the parameter type itself. In the former case, the type "T" is determined by the `typeid` value passed as argument; in the latter case, the type "T" is determined by the type of the passed argument.
 
-The compile time type establisehd by a parameter can be used as the type of subsequent parameters in the parameter list:
+A caller-determined parameter type can be used as the type of subsequent parameters in the parameter list:
 
 ```go
 // in each call, 'min' and 'max' will have the same type as 'val'
 // ($ should only prefix the first T parameter)
 clamp :: proc(val: $T, min: T, max: T) -> T {
-    // for the function to compile, 
+    // for the procedure to compile, 
     // T must be valid operands of <= and =>
     if val <= min {
         return min
@@ -182,9 +182,9 @@ clamped_float := clamp(f32(8.3), 2, 5)           // T is f32
 clamped_bool := clamp(true, false, false)       
 ```
 
-#### Parameters with both compile time arguments *and* compile time types
+#### Parameters with both compile time arguments *and* caller-determined types
 
-An individual parameter can have both a compile time argument *and* a compile time type:
+An individual parameter can both require a compile time argument *and* get its type from the caller's argument:
 
 ```go
 // the array size is determined by the value passed to 'n',
@@ -202,7 +202,7 @@ arr_B = array_n(u8(5))
 
 #### `where` clauses
 
-In some cases, we may wish to restrict which compile time types and arguments are allowed for a function, and we can do this by adding a `where` clause. The `where` clause of a function has a compile time boolean expression which is evaluated for each call of the function. If the expression evaluates false, the call triggers a compilation error.
+A `where` clause effectively allows us to restrict which types or compile time values are allowed for a procedure. The `where` clause of a procedure takes a compile time boolean expression which is evaluated for each call of the procedure. If the expression evaluates false, the call triggers a compilation error.
 
 ```go
 // the where clause's boolean expression determines 
@@ -250,11 +250,11 @@ i = sum(8)
 > [!NOTE]
 > ‘E’ stands for Element, as in ‘element of a slice’, so it is the conventional name in this situation.
 
-In this case, we could express the same thing using just a `where` clause with no specialization, but the code is then arguably harder to read:
+In this case, though, we could express the same thing more simply with just a `where` clause and no specialization:
 
 ```go
 // type_elem_type returns the type of the 
-sum :: proc(val: $T) -> T where intrinsics.type_is_numeric(intrinsics.type_elem_type(T)) {
+sum :: proc(val: $T[]) -> T where intrinsics.type_is_numeric(T) {
     // ...
 }
 ```
@@ -318,7 +318,7 @@ c: Cat(f32, string, 6)
 c2: Cat(int, string, 11)     
 ```
 
-The most obvious use case for generic types are collections. For example, a stack:
+The most obvious use case for generic types are collections, such as a stack:
 
 ```go
 Stack :: struct($T: typeid) {
@@ -327,9 +327,9 @@ Stack :: struct($T: typeid) {
 
 make_stack :: proc($T: typeid) -> Stack(T) { /* ... */ }
 
-push :: proc(stack: $T/^Stack($E), val: E) { /* ... */ }
+push :: proc(stack: ^Stack($T), val: T) { /* ... */ }
 
-pop :: proc(stack: $T/^Stack($E)) -> E { /* ... */ }
+pop :: proc(stack: ^Stack($T)) -> T { /* ... */ }
 
 // make a stack of ints
 s := make_stack(int)  
@@ -339,16 +339,13 @@ push(&s, 4)
 push(&s, 7)
 
 // remove and return last value from the stack (7)
-i := pop(&s)               // returns 7
+i := pop(&s)              
 ```
-
-> [!NOTE]
-> Specialization is often just a shorthand for what can be expressed in a `where` clause, but in the example above, we want to enforce that the second argument of push and that the return type of pop must match the element type of the stack argument, and the only way to express this is with specialization.
 
 
 ### Parameteric polymorphic unions
 
-Like structs, unions can also have compile time `typeid` and unsigned integer parameters:
+Like structs, unions can also take compile time `typeid` and unsigned integer parameters:
 
 ```go
 Pet :: union ($T: typeid, $U: typeid, $N: uint) {
@@ -373,7 +370,7 @@ p = p2
 pet: Pet  
 ```
 > [!NOTE]
-> The main use case for a parapoly union is simply to support parapoly structs with type params in a union: if a variant type in a union has type params, then the union itself must have type params so that its type params can be passed to the variant.
+> The main use case for a parapoly union is simply to support parapoly structs with type params in a union: if a variant type in a union has non-concrete type params, then the union itself must have type params that are passed to the variant.
 
 
 ### Struct fields with the `using` modifier
@@ -389,21 +386,25 @@ Cat :: struct {
     using pet: Pet,    
 }
 
-c: Cat
-c.pet.name = "Mittens"
-c.name = "Mittens"       // same as prior line
+cat: Cat
+cat.pet.name = "Mittens"
+cat.name = "Mittens"       // same as prior line
 ```
 
 Marking a nested struct field with `using` also means the containing struct type can be used where the nested type is expected as syntatic shorthand for the nested struct:
 
 ```go
-p: Pet
-p = c.pet
-p = c            // same as prior line (actually assigns the nested Pet, not the Cat)
+pet: Pet
+pet = cat.pet
 
-// assume that function feed_pet requires a Pet argument
+// same as prior line (assigns the Pet inside cat, not cat itself)
+pet = cat            
+
+// assume that procedure feed_pet requires a Pet argument
 feed_pet(c.pet)
-feed_pet(c)      // same as prior line (actually passes the nested Pet, not the Cat)
+
+// same as prior line (actually passes the nested Pet, not the Cat)
+feed_pet(c)      
 ```
 
 A nested struct field marked with `using` can be given the special name `_`, which makes the nested struct itself inaccessible by name (though its members can still be accessed individually as if they were members of the containing struct):
@@ -421,8 +422,8 @@ Cat :: struct {
 }
 
 // can still accesss members of the nested Pet as if they belong to Cat directly
-c: Cat
-i: int = c.y             
+cat: Cat
+i: int = cat.y             
 ```
 
 
@@ -434,61 +435,7 @@ Odin enables runtime polymorphism with a few features:
 
 - unions 
 - untyped pointers
-- proc references
-
-We've already covered unions and two kinds of untyped pointer (`rawptr`, `uintptr`) (see [Data Types in Odin](odin_data_types.md)), but we haven't yet introduced the third kind of untyped pointer, the `any` type, nor have we introduced proc references. We'll explain how these new things work before discussing how they can enable runtime polymorphism.
-
-### The `any` type
-
-Odin has another kind of untyped pointer called `any`, which is like a `rawptr` but which additionally contains a `typeid`. Every type in the language can be implicitly cast to `any`:
-
-```go
-a: any
-i: int
-
-a = i        // the any value has a typeid of int and points to i
-```
-
-> [!NOTE]
-> The cast of `i` to `any` is a bit syntactically inconsistent with the rest of the language because, despite not using the address operator, the resulting `any` value contains the address of the int variable, not its value.
-
-When we cast a pointer expression to `any`, the result holds the `typeid` of the pointer type and holds the same address as the pointer (rather than the address of the pointer itself):
-
-```go
-a: any
-i: int
-
-a = &i       // the any value has a typeid of ^int and points to i
-```
-
-Even more odd, a whole expression can be cast to `any`, in which case the `any` value holds a pointer into the stack frame where the expression result is stored:
-
-```go
-a: any
-i: int
-
-a = 3 + i          // typeid of int and points into the stack frame
-
-// compile error: 
-// unlike a cast to `any`, the & operator only works directly
-// on variables, struct fields, and array indexing expressions
-ip := &(3 + i) 
-```
-
-
-### Proc references
-
-A proc reference is simply what other languages would call a function pointer:
-
-```go
-add :: proc(a: int, b: int) -> int {
-    return a + b
-}
-
-f: proc(a: int, b:int) -> int
-f = add
-x := f(3, 5)   // same as calling add
-```
+- procedure references
 
 ### Heterogenous collections
 
@@ -499,7 +446,6 @@ Cat :: struct{}
 Dog :: struct{}
 
 Pet :: union { Cat, Dog }
-
 
 pets: [10]Pet
 
@@ -524,7 +470,7 @@ As a solution for runtime polymorphism, unions have two limitations:
 - A union is not extensible: you cannot add additional variants to a union without redefining the original definition. This makes it impossible to extend a union brought in from a library whose source you cannot edit (or prefer not to edit).
 - The variants held in a union value can only be accessed *via* type switches or type asserts, `e.g.` in the example above, accessing the value held in a Pet required a type switch with explicit cases for Cat and Dog. So even if a union type could be extended with new variants, all existing code that uses the type would have to be edited to account for the new variants.
 
-Runtime polymorphism also requires a way to perform dynamic dispatch, which is not provided by proc groups: 
+Runtime polymorphism also requires a way to perform dynamic dispatch, which is *not* provided by proc groups: 
 
 ```go
 Cat :: struct{}
@@ -553,7 +499,7 @@ case Dog:
 Parapoly procs don't provide runtime dispatch either:
 
 ```go
-// a parapoly function where T must be a variant of Pet
+// a parapoly procedure where T must be a variant of Pet
 para_sleep :: proc(pet: $T) where intrinsics.type_is_variant_of(Pet, T) { 
     // a 'when' code block is included in the compiled code only if true
     when T == Cat {
@@ -568,14 +514,32 @@ para_sleep :: proc(pet: $T) where intrinsics.type_is_variant_of(Pet, T) {
 para_sleep(Dog{})   
 ```
 
-We can get closer to actual runtime dispatch with proc refs:
+We can get closer to actual runtime dispatch with procedure references (which are simply what other languages would call function pointer):
+
+```go
+add :: proc(a: int, b: int) -> int {
+    return a + b
+}
+
+// variable f is a proc ref
+// with signature (int, int) -> int
+f: proc(a: int, b:int) -> int
+
+f = add
+
+x := f(3, 5)   // same as calling add
+```
+
+So we can use proc references in our Pet example:
 
 ```go
 Cat :: struct{
-    sleep_proc : proc(Cat)
+    // the field 'sleep' is a proc ref for proc that takes a Cat and returns nothing
+    sleep : proc(Cat)    
 }
 Dog :: struct{
-    sleep_proc : proc(Dog)
+    // the field 'sleep' is a proc ref for proc that takes a Dog and returns nothing
+    sleep : proc(Dog)
 }
 Pet :: union { Cat, Dog }
 
@@ -583,26 +547,26 @@ Pet :: union { Cat, Dog }
 sleep_cat :: proc(c: Cat) {}
 sleep_dog :: proc(d: Dog) {}
 
-dog : = Dog{ sleep_proc = sleep_dog }
-cat : = Cat{ sleep_proc = sleep_cat }
+dog : = Dog{ sleep = sleep_dog }
+cat : = Cat{ sleep = sleep_cat }
 
 pet: Pet = dog
 
-// we cannot access the .sleep_proc field
+// we cannot access the .sleep field
 // without using a type switch (or type asserts), so we
 // are still dispatching on type at compile time, not runtime
 switch p in pet {
 case Cat:
-    p.sleep_proc(p)
+    p.sleep(p)
 case Dog:
-    p.sleep_proc(p)
+    p.sleep(p)
 }
 ```
 
 Even if we create a parapoly proc, the dispatch on a union value's type still happens at compile time:
 
 ```go
-// a parapoly function where T must be a variant of Pet
+// a parapoly procedure where T must be a variant of Pet
 // and must have a field .sleep_proc that is a proc with a parameter of type T
 sleep_para :: proc(pet: $T) where intrinsics.type_is_variant_of(Pet, T) { 
     pet.sleep_proc(pet)
@@ -622,33 +586,30 @@ For actual dynamic dispatch, we need not just proc refs but also untyped pointer
 
 ```go
 Pet :: struct {
-    sleep_proc: proc(Pet)
-    data: any    
+    sleep: proc(Pet)
+    data: rawptr    
 }
 
 Dog :: struct{}
 
-sleep_dog :: proc(pet: any) {
-    dog := pet.(Dog)
+sleep_dog :: proc(pet: Pet) {
+    dog := (^Dog)(pet.data)
     // ...
 }
 
 pet : = Pet{ 
-    sleep_proc = sleep_dog, 
+    sleep = sleep_dog, 
     data = Dog{} 
 }
 
 // dynamically calls sleep_dog
-pet.sleep_proc(pet)
+pet.sleep(pet)
 ```
 
-Effectively, this pattern establishes an extensible Pet interface: a struct can be said to implement Pet if there is a corresponding `sleep_` proc with the correct signature, *e.g.* a Cat struct implements interface Pet if it has a corresponding `sleep_cat`.
+Effectively, this pattern establishes an extensible Pet interface: a struct can be said to implement Pet if there is a corresponding `sleep_x` proc with the correct signature, *e.g.* a Cat struct implements interface Pet if it has a corresponding `sleep_cat`.
 
 > [!NOTE]
 > The method-call syntax familiar from other languages, `x.y()`, has no special meaning in Odin. To invoke `x.y()` simply invokes the proc ref stored in field 'y' of 'x', but no arguments are implicitly passed. Hence, in our example above, the pet variable is passed explicitly.
-
-> [!NOTE]
-> Despite its name being so short and convenient, the `any` type is not intended to be commonly used except in a handful of niche use cases (including this interface pattern). In particular, you should prefer using a union over using `any` wherever possible.
 
 For an interface that has multiple psuedo-methods proc refs, it is convenient to bundle the proc refs into a single struct:
 
@@ -657,26 +618,29 @@ Dog :: struct{}
 
 // defines the proc refs of the Pet interface
 Pet_Procs :: struct {
-    sleep: proc(any)
-    eat: proc(any, int) -> int
+    sleep: proc(Pet)
+    eat: proc(Pet, int) -> int
 }
 
 Pet :: struct {
     procs: Pet_Procs
-    data: any    
+    data: rawptr    
 }
 
+// a constant representing the Dog 
+// implementation of the Pet interface
 dog_procs :: Pet_Procs{
-    sleep = proc(pet: any) {
-        dog := pet.(Dog)
+    sleep = proc(pet: Pet) {
+        dog := (^Dog)(pet.data)
         // ...
     },
-    eat = proc(pet: any, i: int) -> int {
-        dog := pet.(Dog)
+    eat = proc(pet: Pet, i: int) -> int {
+        dog := (^Dog)(pet.data)
         // ...
     },
 }
 
+// a Pet instance wrapping a Dog
 pet := Pet{ 
     procs = dog_procs, 
     data = Dog{} 
@@ -684,4 +648,31 @@ pet := Pet{
 
 // dynamically calls dog_procs.eat
 i: int = pet.procs.eat(pet, 4)
+```
+
+Another quality of life affordance with this pattern is to create procedures for 'conversions' to the interface wrapper type:
+
+```go
+pet_from_dog :: proc(dog: ^Dog) -> Pet {
+    return Pet { sleep = sleep_dog, data: dog }
+}
+
+// proc group for all pet_from_x procs
+pet_from :: proc { pet_from_dog }
+
+// get a Pet wrapping a Dog
+dog := Dog{}
+pet = pet_from(&dog)
+
+pet.sleep(pet)
+```
+
+Not only is this pattern more concise when you need to wrap an implementing type as the interface type, it can help avoid accidents where, say, you accidentally create a Pet with a mismatch of procedures and implementing type:
+
+```go
+dog := Dog{}
+// danger! mismatch of procedure reference and data type:
+// calling sleep on this Pet will call sleep_cat with the 
+// rawptr referencing a Dog, leading to bad behaviour
+return Pet { sleep = sleep_cat, data: &dog }
 ```

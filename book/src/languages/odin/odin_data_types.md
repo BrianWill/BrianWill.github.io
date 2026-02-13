@@ -9,9 +9,9 @@ This text is the supplementary notes for a series of videos that introduces the 
 > [!WARNING]
 > The videos (and text) assume no prior knowledge of Odin itself, but they assume the audience already has some familiarity with C (or other languages with pointers, such as C++, Rust, Zig, or Go). Also be clear that these notes are not intended to be sequentially read on their own without having first watched the videos.
 
-This topic is followed by another video and text: [Polymorphism in Odin](odin_polymorphism.md)
+These videos are followed by awnother topic: [Polymorphism in Odin](odin_polymorphism.md)
 
-For more on Odin, see also:
+For more about Odin, see also:
 
 - [the Odin docs overview](http://odin-lang.org/docs/overview/)
 - [the Odin docs demo](http://odin-lang.org/docs/demo/)
@@ -38,7 +38,7 @@ Integers in Odin come in five different sizes with both signed and unsigned type
 | `u64`  | unsigned   | 64 bits  |
 | `u128`  | unsigned   | 128 bits  |
 
-However, the types `int` and `uint` are generally your default choices, and their sizes depend on the target platform you’re compiling for. For example, when compiling for x64, an `int` or `uint` will be 64 bits.
+There's also the types `int` and `uint`, which are generally your default choices. Their sizes depend on the target platform you’re compiling for, *e.g.* when compiling for x64, an `int` or `uint` will be 64 bits.
 
 There’s also the type called `byte`, which is actually just an alias for `u8`.
 
@@ -53,15 +53,16 @@ Floating-point numbers come in three sizes:
 
 ## Booleans
 
-A bit surprisingly, booleans also come in multiple sizes:
+Booleans also come in multiple sizes:
 
 |  |   |
 |---|---|
 | `b8`  | 8 bits  |
 | `b16`  | 16 bits  |
 | `b32`  | 32 bits  |
+| `b64`  | 32 bits  |
  
-While, in principle, representation of a boolean only requires a single bit, Odin has these multiple sizes mainly to allow easier interop with various binary formats and to allow you to better control padding and alignment in structs. Most of the time, however, you’ll simply default to using the type called `bool`. Like a `b8`, a `bool` is 8-bits in size, but the compiler considers `b8` and `bool` to be distinct types.
+While, in principle, representation of a boolean only requires a single bit, Odin has these multiple sizes mainly to allow easier interop with various binary formats and to allow you to better control padding and alignment in structs. Most of the time, however, you’ll simply default to using the type called `bool`. Like a `b8`, a `bool` is 8-bits in size (though the compiler considers `b8` and `bool` to be distinct types).
 
 ## Strings
 
@@ -78,7 +79,7 @@ Odin also has another integer type called `rune` that represents the unicode cod
 
 ## Zero values
 
-Data types in Odin have a concept of a "zero value" that is significant in a few contexts. For example, when a variable is left uninitialized, Odin by default will zero out its bytes, giving it the zero value.
+Data types in Odin have a concept of a "zero value", meaning the value of the type where every bit is 0. When a variable is left uninitialized, it defaults to the zero value.
 
 Zero values by type:
 
@@ -88,7 +89,7 @@ Zero values by type:
 | booleans | false  |
 | strings | empty string |
 | pointers  |  nil  |
-| structs | a zero value struct has fields that are all their zero values |
+| structs | all fields are all their zero values |
 | enums | 0 (enums are represented in memory as integers) |
 | unions | nil (unless the union type is declared with certain directives)
 
@@ -98,19 +99,27 @@ Compared to C and some other languages, Odin is much stricter about explicit cas
 
 ## Distinct types and aliases
 
-The double colon syntax in Odin denotes a compile-time definition, either of a constant, a function, or type:
+The double colon syntax in Odin denotes a compile-time definition, either of a constant, a procedure, or type:
 
 ```go
-Also_Int :: int               // defines Also_Int as an alias for int
-My_Int :: distinct int        // defines My_Int as a type that is like int but considered separate by the compiler
+// defines Also_Int as an alias for int
+Also_Int :: int               
+
+// defines My_Int as a type that is like int but 
+// considered separate by the compiler
+My_Int :: distinct int        
 ```
 
 A distinct type by be explicit cast to and from its doppelganger:
 
 ```go
 // the explicit cast is required here because My_Int is distinct from int
-i: int = 3                   // declare an int variable 'i' and assign it the value 3
-j: My_Int = My_Int(i)        // declare a My_Int variable 'j' and assign it the value of i
+
+// declare an int variable 'i' and assign it the value 3
+i: int = 3                   
+
+// declare a My_Int variable 'j' and assign it the value of i
+j: My_Int = My_Int(i)        
 ```
 
 ## Literals
@@ -118,9 +127,9 @@ j: My_Int = My_Int(i)        // declare a My_Int variable 'j' and assign it the 
 Literals in Odin have their own distinct types, which a bit confusingly are called the "untyped" types. Integer literals are untyped integers, floating-point literals are untyped floats, boolean literals are untyped booleans, and string literals are untyped strings.
 These special untyped types have a few special rules:
 
-- First they only exist at compile time, so you can’t, say, create a variable with one of these untyped types.
-- Second, these types can be implicitly cast to their related types.
-- Third, casts of a literal perform range checks.
+1. They only exist at compile time, so you can’t, say, create a variable with one of these untyped types.
+1. These types can be implicitly cast to their related types.
+1. Casts of a literal perform range checks.
 
 Some example casts:
 
@@ -152,7 +161,7 @@ s := "hi"      // inferred to be string
 
 A pointer is a value that represents a memory address. To *dereference* a pointer is to access the value at the memory address represented by the pointer.
 
-A pointer value is *typed* as a specific kind of pointer, *e.g.* an `int` pointer is intended to represent the memory addresses of only ints, or a `string` pointer is intended to represent the memory addresses of only strings, *etc.* By virtue of pointers being typed and static typing, the compiler can know the type of value at the address represented by the pointer. For example, dereferencing an `int` pointer accesses an `int` value rather than some kind of other value.
+A pointer value is *typed* as a specific kind of pointer, *e.g.* an `int` pointer is intended to represent the memory addresses of only ints, or a `string` pointer is intended to represent the memory addresses of only strings, *etc.* Thanks to pointers being typed and Odin's static typing, the compiler can know the type of value at the address represented by the pointer. For example, dereferencing an `int` pointer accesses an `int` value rather than some kind of other value.
 
 The `^` operator on the right side of a pointer expression dereferences the pointer. The `&` (reference) operator on the left side of a storage location expression (*e.g.* a variable) returns its address:
 
@@ -167,7 +176,7 @@ p^ = 3         // assign 3 to the dereference of p (a.k.a. the address stored in
 ```
 
 > [!NOTE]
->  Odin uses the ^ symbol instead of C’s traditional asterisk. Also unlike C, Odin puts the dereference operator on the right. Placing it on the right works out nicely when pointers are used in combination with arrays.
+>  Odin uses the `^` symbol instead of C’s traditional `*`. Also unlike C, Odin puts the dereference operator on the right. Placing it on the right works out nicely when pointers are used in combination with arrays.
 
 ### rawptr
 
@@ -180,7 +189,7 @@ Other pointer types can be implicitly cast to `rawptr`, but a cast from `rawptr`
 Like a `rawptr`, a `uintptr` is a pointer that can represent the address of any kind of value, but unlike a `rawptr`, a `uintptr` can be used as an unsigned integer in arithmetic operations. 
 
 > [!NOTE]
-> Unlike C or other C-like languages, Odin doesn’t let us do arithmetic directly on pointers, but instead we can convert a pointer into a uintptr, perform the arithmetic, and then cast back to a pointer.
+> Unlike C or other C-like languages, Odin doesn’t let us do arithmetic directly on pointers, but instead we can convert a pointer into a uintptr, perform the arithmetic, and then cast back to a pointer. More commonly, though, a multi-pointer is used instead.
 
 ### multi-pointers
 
@@ -196,7 +205,7 @@ i = m[-5]      // unsafe! assing to i the int read from the address of m - size_
 ```
 
 > [!WARNING]
-> Always keep in mind that arbitrarily indexing memory is fundamentally unsafe, as in this example where we are jumping to meaningless locations on the call stack. In real use cases, multi-pointers should generally only be used to access addresses within known allocated buffers of memory.
+> Always keep in mind that arbitrarily indexing memory is fundamentally unsafe, as in this example where we are jumping to meaningless locations on the call stack. In real use cases, multi-pointers should generally only be used to access addresses within known allocated blocks of memory.
 
 ## Arrays
 
@@ -206,8 +215,11 @@ Arrays in Odin are fixed-size, homogenous, and either stack-allocated or globall
 // decare variable 'arr' to be an array of 5 ints
 arr: [5]int          
 
-arr = [5]int{1, 2, 3, 4, 5}     // assign to arr a literal of 5 ints
-arr = {1, 2, 3, 4, 5}           // shorthand for prior (the size and type inferred is from the target)
+// assign to arr a literal of 5 ints
+arr = [5]int{1, 2, 3, 4, 5}     
+
+// shorthand for prior (the size and type inferred is from the target)
+arr = {1, 2, 3, 4, 5}           
 ```
 
 ```go
@@ -261,10 +273,10 @@ By default, array indexing in Odin is bounds checked both at compile time and ru
 ```go
 arr: [5]bool       
 
-arr[100] = true                 // compile time bounds check error
+arr[100] = true          // compile time bounds check error
 
 i := 100
-arr[i] = true                   // runtime bounds check panic
+arr[i] = true            // runtime bounds check panic
 ```
 
 When we try to assign to index 100 of this 5 bool array, the compiler gives us a compilation error because it knows the compile time value 100 is out of bounds for this array. If though we index an array with a runtime expression, the bounds check happens at runtime, so indexing this array with a variable whose value will be 100 will trigger a panic.
@@ -277,7 +289,7 @@ arr: [5]bool
 // no bounds checks will be performed in this block
 #no_bounds_check {
     i := 100
-    arr[i] = bool              // no panic but unsafe at runtime
+    arr[i] = bool        // no panic but unsafe at runtime
 }
 ```
 
@@ -290,12 +302,15 @@ A *slice* in Odin is a value that represents a subrange of an array (or alternat
 > For Go programmers, it’s important to note that, unlike Go slices, Odin slices do not contain a capacity, and there is no append operation for slices. Odin's closest equivalent of a Go slice is called a [dynamic array]().
 
 ```go
-s: []int                 // declare 's' to be a slice of ints
+// declare 's' to be a slice of ints
+s: []int            
 
 arr: [100]int       
-s = arr[30:40]           // from the array, get a slice starting at index 30 and ending at index 40
+// from the array, get a slice starting at index 30 and ending at index 40
+s = arr[30:40]      
 
-assert(10 == len(s))     // length of the slice is 10
+// length of the slice is 10
+assert(10 == len(s))     
 
 // because index 0 of this slice is the same as index 30 of the array,
 // these two assignments assign to the same location in memory
@@ -309,7 +324,7 @@ As a convenience, the first integer of a slice operation can be omitted, in whic
 ## Allocations
 
 Because Odin is not a garbage collected language, the programmer is responsible for allocating and deallocating any heap memory they want to use. 
-For example, if we want to create a slice whose referenced data resides on the heap, we can call the `make_slice` function (from the base library), which returns a slice that references newly allocated heap memory. When we’re done with a heap-allocated slice, we should call `delete_slice` (from the base library) to deallocate the slice’s heap memory: 
+For example, if we want to create a slice whose referenced data resides on the heap, we can call the `make_slice` procedure (from the base library), which returns a slice that references newly allocated heap memory. When we’re done with a heap-allocated slice, we should call `delete_slice` (from the base library) to deallocate the slice’s heap memory: 
 
 ```go
 s: []int              
@@ -322,13 +337,13 @@ delete_slice(s)
 ```
 
 > [!NOTE]
-> The Odin base library also has functions `make` and `delete`. These [proc group]() functions are the generally preferred shorthand for invoking all variants of the `make_X` / `delete_X` functions.
+> The Odin base library also has procedures `make` and `delete`. These [proc group]() procedures are the generally preferred shorthand for invoking all variants of the `make_x` / `delete_x` procedures.
 
 Whereas before we were creating slices that referenced the memory of stack-allocated arrays, here the slice references heap allocated memory with no array involved. (And be clear that the slice variable itself is still stack allocated.)
 
-The `make_slice` function, the `delete_slice` function, and all other allocating or deallcating functions let you pass an allocator. Different allocators can track their allocations in different ways, and some allocators may perform better than others in different use cases. 
+The `make_slice` procedure, the `delete_slice` procedure, and all other allocating or deallcating procedures let you pass an allocator. Different allocators can track their allocations in different ways, and some allocators may perform better than others in different use cases. 
 
-When no allocator is explicitly passed to these functions, they implicitly use the allocator provided by the [context](). The code below is functionally the same as the code above:
+When no allocator is explicitly passed to these procedures, they implicitly use the allocator provided by the [context](https://odin-lang.org/docs/overview/#implicit-context-system). The code below is functionally the same as the code above:
 
 ```go
 s: []int              
@@ -340,7 +355,7 @@ s = make_slice([]int, 10, context.allocator)
 delete_slice(s, context.allocator)
 ```
 
-See more about [the context and allocations in Odin]().
+See more about [the context](https://odin-lang.org/docs/overview/#implicit-context-system) and [allocations](https://odin-lang.org/docs/overview/#allocators) in Odin.
 
 ## Dynamic Arrays
 
@@ -362,9 +377,9 @@ delete_dynamic_array(arr)       // deallocate from the referenced allocator
 ```
 
 > [!NOTE]
-> Whereas slices often reference subranges of stack-allocated arrays, that is not an intended use case for dynamic arrays. Instead, the data referenced by a dynamic array is normally heap-allocated *via* base library functions.
+> Whereas slices often reference subranges of stack-allocated arrays, that is not an intended use case for dynamic arrays. Instead, the data referenced by a dynamic array is normally heap-allocated *via* base library procedures.
 
-By virtue of storing a capacity integer and allocator reference, a dynamic array allows us to append values with the `apppend_elems` function:
+By virtue of storing a capacity integer and allocator reference, a dynamic array allows us to append values with the `apppend_elems` procedure:
 
 ```go
 arr: [dynamic]int
@@ -387,11 +402,11 @@ assert(9 <= cap(arr))
 ```
 
 > [!NOTE]
-> The Odin base library also has an `append` [proc group]() function, which is generally preferred shorthand for invoking all variants of the `append_X` functions.
+> The Odin base library also has an `append` [proc group]() procedure, which is generally preferred shorthand for invoking all variants of the `append_x` procedures.
 
 ## Maps
 
-*Maps* are hashmaps of key-value pairs. Concretely a map value consists of a pointer to a block of memory where the key-value pairs reside, an integer indicating the number of key-value pairs, and a reference to an allocator.
+*Maps* are hashmaps of key-value pairs. Concretely, a map value consists of a pointer to a block of memory where the key-value pairs reside, an integer indicating the number of key-value pairs, and a reference to an allocator.
 
 Before using a map, we must allocate it. Any time new keys are added to the map, the map's memory may be reallocated. Like all allocated things, we generally should eventually deallocate it when we no longer need it.
 
@@ -424,18 +439,18 @@ Cat :: struct {
     b: f32,   // field 'b' is an f32
 }
 
-c: Cat        // declare a variable 'c' of type Cat
-c.a = 5       // assign to the 'a' field of 'c'
-c.b = 3.6     // assign to the 'b' field of 'c'
+cat: Cat        // declare a variable 'cat' of type Cat
+cat.a = 5       // assign to the 'a' field of 'cat'
+cat.b = 3.6     // assign to the 'b' field of 'cat'
 
-// assign a Cat literal (where 'b' is 3.6 and 'a' is 5) to 'c'
-c = Cat{b = 3.6, a = 5}
+// assign a Cat literal (where 'b' is 3.6 and 'a' is 5) to 'cat'
+cat = Cat{b = 3.6, a = 5}
 
 // omitted fields default to zero values (so 'a' is 0 and 'b' is 0)
-c = Cat{}                       
+cat = Cat{}                       
 
 // the literal type can be inferred from the assignment context
-c = {a = 5, b = 3.6}            
+cat = {a = 5, b = 3.6}            
 ```
 
 ### Anonymous structs
@@ -454,14 +469,14 @@ Cat :: struct {
     b: f32,
 }
 
-c: Cat
+cat: Cat
 
 // cast an anonymous struct value to Cat
 // (valid because they have the same set of field names and types)
-c = Cat(anon)                            
+cat = Cat(anon)                            
 
 // cast a cat value to the anonymous struct
-anon = struct{a: int, b: f32}(c)         
+anon = struct{a: int, b: f32}(cat)         
 ```
 
 Anonymous structs are particularly convenient for fields in other structs. Here this Dog struct has a field named nested that is itself an anonymous struct, and we can then read and write the fields of the nested struct individually or as a complete struct. 
@@ -472,13 +487,13 @@ Dog :: struct {
     nested: struct {a: int, b: f32},     // anonymous struct field
 }
 
-d: Dog
+dod: Dog
 
 // we can assign to individual fields of an anonymous struct member...
-d.nested.a = 3
+dod.nested.a = 3
 
 // ... or we can assign a whole anonymouse struct value
-d.nested = struct {a = 5, b = 3.6}
+dod.nested = struct {a = 5, b = 3.6}
 ``` 
 
 The semantics would be exactly the same if we defined a named struct type to use for the field, but the inner anonymous struct effectively allows us to logically group fields in the outer struct with less hassle.
@@ -531,7 +546,7 @@ In a context where an enum value is expected, such as in an assignment to an enu
 
 ```go
 d: Direction
-d = .South                             // Direction.South
+d = .South            // Direction.South
 ```
 
 Normally we only want to use the named values of an enum, but we can actually cast any integer value into an enum type.:
@@ -545,19 +560,19 @@ We can even do arithmetic with enum values (though there aren’t many cases whe
 
 ```go
 d: Direction
-d = Direction.West + Direction.East    // Direction(4)
+d = Direction.West + Direction.East    // 1 + 3 is Direction(4)
 ```
 
 In a `for` loop, we can loop over every named value of enum type in the order they listed in the enum definition:
 
 ```go
 // loop over all named values of an enum type, printing:
-// 0 North 
-// 1 East
-// 2 South
-// 3 West
+// North 0
+// East 1
+// South 2
+// West 3
 for d, index in Direction {
-    fmt.println(index, d)
+    fmt.println(d, index)
 }
 ```
 
@@ -594,12 +609,13 @@ case .East:
     // d is .East
 case .South:
     // d is .South
-case:   // the default case (allowed by #partial)
+case:   
+    // the default case (allowed by #partial)
     // d is either .North or .West
 }
 ```
 
-To get an enum value name as a string, we can call a function from the reflect package. The function `enum_name_from_value` returns the name of an enum value as a string. The function also returns a boolean that will be false if the enum value has no name:
+To get an enum value name as a string, we can call a procedure from the reflect package. The procedure `enum_name_from_value` returns the name of an enum value as a string. The procedure also returns a boolean that will be false if the enum value has no name:
 
 ```go
 d: Direction = .South
@@ -609,7 +625,7 @@ if name, ok := reflect.enum_name_from_value(d); ok {
 }
 ```
 
-Using function `enum_from_name` from the reflect package allows us to go the other way: we can get an enum value from a string matching the value's name.
+Using procedure `enum_from_name` from the reflect package allows us to go the other way: we can get an enum value from a string matching the value's name.
 
 ```go
 // if the string doesn’t match a named value of the 
@@ -626,8 +642,8 @@ An *enumerated array* is a readonly array with values fixed at compile time and 
 ```go
 Direction :: enum { North, East, South, West } 
 
-// declare 'direcitons_spanish' as an enumerated array of four strings
-// The four indices correspond to the named values of the Direction enum
+// Declare 'direcitons_spanish' as an enumerated array of four strings.
+// The four indices correspond to the named values of the Direction enum.
 directions_spanish :: [Direction]string {
     .North = "Norte",
     .East = "Este",
@@ -658,10 +674,15 @@ Pet :: union { Cat, Dog, Bird }
 // assume that Cat is denoted by tag 1, 
 // Dog by tag 2, and Bird by tag 3
 
-p: Pet
+pet: Pet
+
 // variants of Pet can be implicitly cast to Pet
-p = Cat{}     // assign 'p' a Pet value containing the zero Cat value and tag 1
-p = Dog{}     // assign 'p' a Pet value containing the zero Dog value and tag 2
+
+// assign 'pet' a Pet value containing the zero Cat value and tag 1
+pet = Cat{}     
+
+// assign 'pet' a Pet value containing the zero Dog value and tag 2
+pet = Dog{}     
 ```
 
 > [!NOTE]
@@ -670,64 +691,70 @@ p = Dog{}     // assign 'p' a Pet value containing the zero Dog value and tag 2
 While variants of a union can be implicitly cast to the union type, we cannot cast the other way around, even explicitly. Instead, to get the variant value held in a union value, we must use a *type assertion*:
 
 ```go
-p: Pet
-d: Dog
+pet: Pet
+dog: Dog
 
-p = d            // implicit cast from Dog to Pet
-d = p.(Dog)      // this type assertion gets the Dog from the union value 
+// implicit cast from Dog to Pet
+pet = dog            
 
-b: Bird
+// this type assertion gets the Dog from the union value 
+dog = pet.(Dog)      
 
-// this type assertion panics because the union value does not hold a Bird
-b = p.(Bird)     
+bird: Bird
+
+// this type assertion panics because the union 
+// value does not hold a Bird
+bird = pet.(Bird)     
 
 ok: bool
-// returns the Bird zero value and false because the union value does not hold a Bird
-b, ok = p.(Bird)    
+// returns the Bird zero value and false because 
+// the union value does not hold a Bird
+bird, ok = pet.(Bird)    
 
 // returns the held Dog value and true
-d, ok = p.(Dog)
+dog, ok = pet.(Dog)
 ```
 
 By default, a union's zero value is `nil`, which has tag 0.
 
 ```go
 // an uninitialized union variable has value nil
-p: Pet                
-assert(p == nil)
+pet: Pet                
+assert(pet == nil)
 ```
 
 When we want to handle multiple variants stored in a union value, it's generally more convenient to use a *type switch*:
 
 ```go
-p: Pet
-// ... assign a value to p
+pet: Pet
 
-// this type switch stores the variant value from 'p' in new variable 'val',
+// ... assign a value to pet
+
+// this type switch stores the variant value from 'pet' in new variable 'p',
 // whose type differs in each case
-switch val in p {
+switch p in pet {
 case Cat:
-    // val is a Cat
+    // p is a Cat
 case Dog:
-    // val is a Dog
+    // p is a Dog
 case Bird:
-    // val is a Bird
-case nil:  // the nil case is optional
-    // val is nil  
+    // p is a Bird
 }
 ```
 
 The `#partial` directive allows a type switch to omit variants of the union and optionally include a default case:
 
 ```go
-p: Pet
-// ... assign a value to p
+pet: Pet
 
-#partial switch val in p {
+// ... assign a value to pet
+
+#partial switch val in pet {
 case Cat:
-    // val is a Cat
-case:  // the default case (covers Dog, Bird, and nil)
-    // val is a Pet
+    // p is a Cat
+case:  
+    // the default case (covers Dog, Bird, and nil)
+    // p is a Pet
 }
 ```
 
@@ -735,32 +762,28 @@ case:  // the default case (covers Dog, Bird, and nil)
 
 Unlike many other languages, Odin has no exception mechanism. It does, though, have runtime "panics", which are triggered by some operations, such as failing bounds checks. Panics will unwind the call stack, but there is no way in the language to catch and recover from these panics except to do some logging and cleanup before the program terminates.
 
-> [!WARNING] Panics are not a mechanism for normal error handling! An *error* represents a non-ideal eventuality beyond your code's control. A *panic* represents a bug in your code.
+> [!WARNING] Panics are not a mechanism for normal error handling! An *error* represents a non-ideal eventuality beyond your programs's control. A *panic* represents a bug in your code.
 
 Normal errors in Odin are represented as ordinary data values, and these errors should follow three strong conventions:
 
-- First, error values are always represented either as boolean, enum, or union types.
-- Second, functions which return multiple values should return the error (if any) as the last return type.
-- Third, the zero-value of an error indicates success (*i.e.* the absence of an error). A non-zero value indicates some kind of error occurred.
+1. Error values are always represented either as boolean, enum, or union types.
+1. Procedures which return multiple values should return the error (if any) as the last return type.
+1. The zero-value of an error indicates success (*i.e.* the absence of an error). A non-zero value indicates some kind of error occurred.
 
 ### Example of a boolean error
 
 ```go
-import "base:intrinsics"
+import "base:strconv"
 
-a := 999999999999999999
-b := 999999999999999999
-
-// overflow_add returns true if addition of its operands overflows
-result, error := intrinsics.overflow_add(a, b)
-if error {
-    // overflow occurred
+num, err := strconv.parse_f64("-52.97")
+if ok {
+    // could not parse string as an f64
 }
 ```
 
 ### Example of an enum error
 
-A number of library functions that perform allocations use this `Allocator_Error` enum to signal allocation errors. Because allocations may fail in multiple ways, it’s useful to convey that information with an enum instead of just using a boolean to signal that some error has occurred: 
+A number of library procedures that perform allocations use this `Allocator_Error` enum to signal allocation errors. Because allocations may fail in multiple ways, it’s useful to convey that information with an enum instead of just using a boolean to signal that some error has occurred: 
 
 ```go
 // declared in package base:runtime
@@ -773,13 +796,13 @@ Allocator_Error :: enum u8 {
 }
 ```
 
-Typically the enum error value returned by a function should be handled by a switch:
+Typically the enum error value returned by a procedure should be handled by a switch:
 
 ```go
 import "core:mem"
 
-data, error := mem.alloc(100) 
-switch error {
+data, err := mem.alloc(100) 
+switch err {
 case .None: 
     // ...  (.None indicates no error occurred)
 case .Out_Of_Memory: 
@@ -811,15 +834,15 @@ Error :: union #shared_nil {
 }
 ```
 
-Typically the union error value returned by a function should be handled by a type switch:
+Typically the union error value returned by a procedure should be handled by a type switch:
 
 ```go
 import "core:os"
 import "core:io"
 import "base:runtime"
 
-file, error := os.open("path/to/file")
-switch e in error {
+file, err := os.open("path/to/file")
+switch e in err {
 case os.General_Error: 
     // ...  
 case io.Error: 
@@ -834,12 +857,12 @@ case os.Platform_Error:
 
 ### `or_return`
 
-Very commonly with error values, we want to immediately return the error if it is non-zero. Here we’re getting the error returned from the function then immediately returning it if it is non-zero:
+Very commonly with error values, we want to immediately return the error if it is non-zero. Here we’re getting the error returned from the procedure then immediately returning it if it is non-zero:
 
 ```go
-result, error := intrinsics.overflow_add(a, b)
-if error {
-    return error     // return the error
+num, okr := strconv.parse_f64("-52.97")
+if !ok {
+    return ok     // return the error
 }
 ```
 
@@ -847,21 +870,21 @@ This pattern is so common that Odin provides the `or_return` operator as shortha
 
 ```go
 // same effect as prior example
-result := intrinsics.overflow_add(a, b) or_return
-
+num := strconv.parse_f64("-52.97") or_return
 ```
 
-In a single-return function, the left operand of an `or_return` must match the function's return type.
+In a single-return procedure, the left operand of an `or_return` must match the procedure's return type.
 
-In a multi-return function, the return values must be named:
+In a multi-return procedure, the return values must be named and the error type must be last:
 
 ```go
-foo :: proc() -> (x: int, y: string, error: bool) {
+foo :: proc() -> (x: int, y: string, err: bool) {
     x = 3
     y = "hi"
-    error = false
+    err = false
 
-    bar() or_return   // returns 3, "hi", and the boolean returned by bar()
+    // if bar returns true, this returns 3, "hi", and true
+    bar() or_return   
     // ...
 }
 ```
@@ -872,15 +895,15 @@ foo :: proc() -> (x: int, y: string, error: bool) {
 The `or_break` operator is basically like `or_return` except it performs a break rather than a return:
 
 ```go
-result, error := intrinsics.overflow_add(a, b)
-if error {
+num, ok := strconv.parse_f64("-52.97")
+if !ok {
     break
 }
 ```
 
 ```go
 // same effect as above
-result := intrinsics.overflow_add(a, b) or_break
+num := strconv.parse_f64("-52.97") or_break
 ```
 
 ### `or_continue`
@@ -888,15 +911,15 @@ result := intrinsics.overflow_add(a, b) or_break
 The `or_continue` operator is like `or_break` except it performs a continue rather than a break:
 
 ```go
-result, error := intrinsics.overflow_add(a, b)
-if error {
+num, ok := strconv.parse_f64("-52.97")
+if !ok {
     continue
 }
 ```
 
 ```go
 // same effect as above
-result := intrinsics.overflow_add(a, b) or_continue
+num := strconv.parse_f64("-52.97") or_continue
 ```
 
 ### `or_else`
@@ -904,15 +927,15 @@ result := intrinsics.overflow_add(a, b) or_continue
 Lastly there is `or_else`, which unlike the other operators, takes a second operand on its right. The right operand is only evaluated if the left operand returns a non-zero error, and then the `or_else` expression evaluates into the right operand value instead of the left operand. In effect, an `or_else` lets us conveniently substitute a default value in the event of an error:
 
 ```go
-result, error := intrinsics.overflow_add(a, b)
-if error {
+num, ok := strconv.parse_f64("-52.97")
+if !ok {
     result = 123
 }
 ```
 
 ```go
 // same effect as above
-result := intrinsics.overflow_add(a, b) or_else 123
+num := strconv.parse_f64("-52.97") or_else 123
 ```
 
 
