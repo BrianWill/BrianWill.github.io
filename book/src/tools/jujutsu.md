@@ -110,6 +110,6 @@ When restoring an old repo state with the `jj operation restore` or `jj undo` co
 
 However, the only way operation log entries or commits get truly deleted from a repo is by running the `jj util gc` command. This command deletes entries from the operations log that are older than a certain threshold (default of 2 weeks) and also deletes the commits that were only relevant to the pruned entries.
 
-## The current empty commit gets automatically hidden when switching away
+### The current empty commit gets automatically hidden when switching away
 
 If your current commit is empty (meaning it represents no file changes relative to its parents), JJ will hide the commit if you switch away to another commit. This may happen not just if you run `jj edit` but if you run any command that switches you to a different current commit.

@@ -7,7 +7,7 @@ The goal of drilling is to **familiarize** yourself with words, not to master th
 
 ## How much time should you spend drilling each day?
 
-Drilling should generally take no more than 20 or 30 minutes per day. Any more time drilling has greatly diminishing effectiveness (due to mental fatigue) and crowds out other forms of language practice that should have higer priority (mainly: listening, reading, and speaking).
+Drilling should generally take no more than 20 or 30 minutes per day. Any more time drilling has greatly diminishing effectiveness (due to mental fatigue) and crowds out other forms of language practice that should have higer priority (listening, reading, and speaking).
 
 ## How much should you drill an individual word?
 
