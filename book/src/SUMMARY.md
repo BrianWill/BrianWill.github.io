@@ -40,4 +40,10 @@
 
 ---
 
+# Learning Japanese
+
+- [Japanese Vocabulary: Drilling and Acquisition](./japanese/vocabulary.md)
+
+---
+
 - [Misc](./misc.md)
