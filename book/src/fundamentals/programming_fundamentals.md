@@ -1,5 +1,7 @@
 # Programming Fundamentals
 
+![Under construction](../construction.gif)
+
 * [every programming language in 15 minutes](https://youtu.be/duhDovqHbEs)
 * [survey of programming languages](https://www.youtube.com/playlist?list=PL7141DE955793D3F0)
 * [text](https://www.youtube.com/playlist?list=PL383CCF1CD8313E13) and [numbers](https://www.youtube.com/playlist?list=PLIbUZ3URbL0FAORgAHK8AEx9pJpscPrqd)

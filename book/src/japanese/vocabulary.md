@@ -1,5 +1,6 @@
 # Japanese Vocabulary: Drilling and Acquisition
 
+![Under construction](../construction.gif)
 
 ## The goal of drilling
 
@@ -47,9 +48,16 @@ Well, on the one hand, covering nearly 12,000 words represents a good chunk of a
 
 So yes, acquiring just a loose familiarity with fewer than 12,000 words over 4 years would not be a great end result. In practice, though, drilling can help you achieve far more than this as long as you use drilling as just a supplement to the core forms of language practice.
 
+## The drilling process
 
-## How to conduct the drills
+Once a set of words is randomly selected from the pool for a drill session, the drilling process proceeds in rounds:
 
-## Why not spaced intervals?
+- For the first round, randomly select ~10 to ~20 words from the set.
+- For each word, say the answer aloud or internally, then check the answer. If your answer was right, you remove the word from the set. If your answer was wrong, you include the word in the next round.
+- Each subsequent round, include the wrong-answered words from the prior round and then randomly select more words from the remaining set to fill out the round (up to a max of ~10 to ~20).
+- The drilling ends when all words have been removed from the set.
 
-## Repeat words you got wrong
+Once a word is correctly answered and removed from the set, the word's lifetime drill count should be incremented, and if the word hits the max drill count target, it should be removed from the word pool.
+
+> [!NOTE]
+> It's fine and arguably beneficial if each round sorts all of the wrong-answered words to the front of the list: this allows you to focus a bit more on the words giving you trouble before dealing with the words that are new that round. Also note that the size of each round effects how frequently the wrong-answered words reoccur in between new words: the fewer words per round, the smaller the ratio of new words relative to wrong-answered words carried over from the prior round, and thus you might be less distracted by new words in between repetitions of the wrong-answered words.

@@ -15,8 +15,7 @@
 # Programming Languages and Tools
 
 - [Programming Languages](./languages/programming_languages.md)
-- [Data Types in Odin](./languages/odin/odin_data_types.md)
-- [Polymorphism in Odin](./languages/odin/odin_polymorphism.md)
+- [Odin Intro - Data Types and Polymorphism](./languages/odin/odin_data_types.md)
 
 ---
 
