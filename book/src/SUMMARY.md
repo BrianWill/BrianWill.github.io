@@ -1,7 +1,7 @@
 # Summary
 
 [About](./about.md)
-- [Blog 2026](./blog_2026.md)
+- [Update log 2026](./blog_2026.md)
 
 ---
 
