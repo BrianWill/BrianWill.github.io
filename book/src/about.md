@@ -6,6 +6,6 @@ This is my collection of notes and supplementary material for various projects, 
 
 [Youtube channel](https://www.youtube.com/@briantwill)
 
-twitter: @brianwill
+[twitter: @brianwill](https://x.com/brianwill)
 
 [Update log 2026](./blog_2026.md)

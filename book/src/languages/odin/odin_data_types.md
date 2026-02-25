@@ -2,16 +2,11 @@
 
 This text is the supplementary notes for a series of videos that introduce data types and polymorphism in the Odin programming language:
 
-- [numbers, booleans, strings, pointers]()
-- [arrays, slices, maps, structs]()
-- [enums, unions, error values]()
-- [compile time polymorphism]()
-- [runtime polymorphism]()
+- [part 1: Data Types](https://youtu.be/6aIpaUKE37I)
+- [part 2: Polymorphism](https://youtu.be/p5KF99mtph0)
 
 > [!WARNING]
 > The videos and this text assume no prior knowledge of Odin itself, but they assume the audience already has some familiarity with C (or other languages with pointers, such as C++, Rust, Zig, or Go). Also be clear that this text is intended to be read after having first watched the videos.
-
-These videos are followed by awnother topic: [Polymorphism in Odin](odin_polymorphism.md)
 
 For more about Odin, see also:
 
