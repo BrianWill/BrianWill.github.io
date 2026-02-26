@@ -44,8 +44,8 @@ Floating-point numbers come in three sizes:
 |  |   |
 |---|---|
 | `f16`  | 8 bits  |
-| `f32`  | 16 bits  |
-| `f64`  | 32 bits  |
+| `f32`  | 32 bits  |
+| `f64`  | 64 bits  |
 
 
 ## Booleans
