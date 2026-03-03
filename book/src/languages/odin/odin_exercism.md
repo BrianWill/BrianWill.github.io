@@ -1,15 +1,12 @@
 ![Under construction](../../construction.gif)
 
-# Odin - Walkthroughs of Small Examples
+# Odin Intro - Code Examples
 
-As a supplement to the [Odin Introduction](odin_data_types.md), here are some walkthroughs of very small Odin programs.
+As a supplement to the [Odin Introduction](odin_data_types.md), here are some walkthroughs of very small Odin code examples.
 
-Language features that weren't covered in the prior material will be explained as they come up.
-
-In some cases, we'll include some tests to demonstrate basics of the testing API.
-
-> [NOTE!]
-> These code examples mainly come from the [Exercism project](https://exercism.org/tracks/odin) and are licensed under the [MIT License](https://opensource.org/license/mit)
+- These code examples mainly come from the [Exercism project](https://exercism.org/tracks/odin) and are licensed under the [MIT License](https://opensource.org/license/mit)
+- Language features that weren't covered in the prior material will be explained as they come up.
+- For some examples, we include a few tests to demonstrate basics of the testing API.
 
 ## Setup
 
@@ -20,7 +17,7 @@ The goal of each exercise is to pass the provided tests. To run the tests for ex
 
 ## Exercise: Binary Search
 
-The procedure
+The procedure `binary_search` returns the index within a list of a target value.
 
 ```go
 package binary_search

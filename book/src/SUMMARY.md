@@ -16,7 +16,7 @@
 
 - [Programming Languages](./languages/programming_languages.md)
 - [Odin Intro - Data Types and Polymorphism](./languages/odin/odin_data_types.md)
-<!-- [Odin Intro - Walkthrough of Small Examples](./languages/odin/odin_data_types.md) -->
+- [Odin Intro - Code Examples](./languages/odin/odin_exercism.md)
 
 ---
 
