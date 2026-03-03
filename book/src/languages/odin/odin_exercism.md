@@ -1,8 +1,12 @@
+![Under construction](../../construction.gif)
+
 # Odin - Walkthroughs of Small Examples
 
 As a supplement to the [Odin Introduction](odin_data_types.md), here are some walkthroughs of very small Odin programs.
 
 Language features that weren't covered in the prior material will be explained as they come up.
+
+In some cases, we'll include some tests to demonstrate basics of the testing API.
 
 > [NOTE!]
 > These code examples mainly come from the [Exercism project](https://exercism.org/tracks/odin) and are licensed under the [MIT License](https://opensource.org/license/mit)
@@ -12,6 +16,97 @@ Language features that weren't covered in the prior material will be explained a
 The Git repo is [here](https://github.com/exercism/odin/tree/main). The examples are found under `exercises/practice`.
 
 The goal of each exercise is to pass the provided tests. To run the tests for exercise `foo`, run the command `odin test exercises/practice/foo` (assuming CWD is root of the repo).
+
+
+## Exercise: Binary Search
+
+The procedure
+
+```go
+package binary_search
+
+// Returns index of the target value in the list. 
+// Returns false if target value is not in list.
+// Assumes list is sorted.
+// #optional_ok means the caller doesn't have to capture the returned boolean
+// list = a slice of T
+// Because T is used in the procedure with the < operator, T must be a numeric type.
+find :: proc(list: []$T, target: T) -> (int, bool) #optional_ok {
+	// indexes denoting start and end of search range
+	start, end := 0, len(list)
+	
+	for start < end {
+		// mid point between start and end
+		middle := (start + end) / 2
+
+		val := list[middle]
+		if val == target {
+			return middle, true
+		} else if target < val {
+			// if target is left of middle...
+			end = middle
+		} else {
+			// if target is right of middle...
+			start = middle + 1
+		}
+	}
+
+	return 0, false
+}
+```
+
+Here are some tests from this exercise:
+
+```go
+package binary_search
+
+import "core:testing"
+
+// The @(test) attribute marks the procedure as a test.
+// A test procedure must have one and only one parameter of type ^testing.T
+// The parameter name does not matter, but 't' is used by convention.
+// Most core procedures of the testing package take the ^T param as their 
+// first argument, and this is used to track the test state.
+
+@(test)
+/// description = finds a value in an array with one element
+test_finds_a_value_in_an_array_with_one_element :: proc(t: ^testing.T) {
+	input := []u32{6}
+	result := find(input, 6)
+	expected := 0
+    // a test fails if the arguments to expect_value() are not equal
+	testing.expect_value(t, result, expected)
+}
+
+@(test)
+/// description = finds a value in the middle of an array
+test_finds_a_value_in_the_middle_of_an_array :: proc(t: ^testing.T) {
+	input := []u32{1, 3, 4, 6, 8, 9, 11}
+	result := find(input, 6)
+	expected := 3
+	testing.expect_value(t, result, expected)
+}
+
+@(test)
+/// description = finds a value at the beginning of an array
+test_finds_a_value_at_the_beginning_of_an_array :: proc(t: ^testing.T) {
+	input := []u32{1, 3, 4, 6, 8, 9, 11}
+	result := find(input, 1)
+	expected := 0
+	testing.expect_value(t, result, expected)
+}
+
+@(test)
+/// description = identifies that a value is not included in the array
+test_identifies_that_a_value_is_not_included_in_the_array :: proc(t: ^testing.T) {
+	input := []u32{1, 3, 4, 6, 8, 9, 11}
+	_, found := find(input, 7)
+	testing.expect_value(t, found, false)
+}
+
+// etc...
+```
+
 
 ## Exercise: Pangram
 
@@ -91,12 +186,6 @@ Here are some of the tests for this exercise:
 package pangram
 
 import "core:testing"
-
-// The @(test) attribute marks the procedure as a test.
-// A test procedure must have one and only one parameter of type ^testing.T
-// The parameter name does not matter, but 't' is used by convention.
-// Most core procedures of the testing package take the ^T param as their 
-// first argument, and this is used to track the test state.
 
 @(test)
 /// description = empty sentence
@@ -355,95 +444,534 @@ test_with_apostrophes :: proc(t: ^testing.T) {
 // etc...
 ```
 
-## Exercise: 
 
-The procedure
+## Exercise: Acronym
+
+
+The procedure `abbreviate` converts a phrase to its acronym.
+
+Hyphens are treated as word separators (like whitespace), but all other punctuation is ignored.
+
+Examples:
+
+| Input                     | Output |
+| ------------------------- | ------ |
+| As Soon As Possible       | ASAP   |
+| Liquid-crystal display    | LCD    |
+| Automated Teller Machine | ATM   |
+
 
 ```go
+package acronym
 
+import "core:strings"
+import "core:text/regex"
+
+abbreviate :: proc(phrase: string) -> string {
+	// A backtick string ignores \ escape sequences.
+	pattern :: `[^ _-]+`
+	
+	// Since we know the regex pattern is correct, we ignore
+	// the return error value.
+	iter, _ := regex.create_iterator(phrase, pattern)
+	defer regex.destroy_iterator(iter)
+
+	// We need a string builder to incrementally build a string.
+	buffer := strings.builder_make()
+	defer strings.builder_destroy(&buffer)
+
+	// Each iteration evaluates match_iterator(), 
+	// and the loop ends when it returns false
+	// capture = the current match
+	// _ = discard of the index
+	for capture, _ in regex.match_iterator(&iter) {
+		first_letter := capture.groups[0][0]
+		strings.write_byte(&buffer, first_letter)
+	}
+
+	// Note that to_string does not make a new allocation.
+	// Instead, it just returns a slice of the builder's internal buffer.
+	acronym := strings.to_string(buffer)
+ 
+	// Freeing the string newly allocated by to_upper
+	// will be the caller's responsibility
+	return strings.to_upper(acronym)
+}
+```
+
+Here are some tests from this exercise:
+
+```go
+package acronym
+
+import "core:testing"
+
+@(test)
+/// description = basic
+test_basic :: proc(t: ^testing.T) {
+
+	expected := "PNG"
+	input := "Portable Network Graphics"
+	result := abbreviate(input)
+	defer delete(result)
+
+	testing.expect_value(t, result, expected)
+}
+
+@(test)
+/// description = punctuation
+test_punctuation :: proc(t: ^testing.T) {
+
+	expected := "FIFO"
+	input := "First In, First Out"
+	result := abbreviate(input)
+	defer delete(result)
+
+	testing.expect_value(t, result, expected)
+}
+
+@(test)
+/// description = all caps word
+test_all_caps_word :: proc(t: ^testing.T) {
+
+	expected := "GIMP"
+	input := "GNU Image Manipulation Program"
+	result := abbreviate(input)
+	defer delete(result)
+
+	testing.expect_value(t, result, expected)
+}
+
+@(test)
+/// description = punctuation without whitespace
+test_punctuation_without_whitespace :: proc(t: ^testing.T) {
+
+	expected := "CMOS"
+	input := "Complementary metal-oxide semiconductor"
+	result := abbreviate(input)
+	defer delete(result)
+
+	testing.expect_value(t, result, expected)
+}
+```
+
+## Exercise: Anagram
+
+The `find_anagrams` procedure takes a target word strings and a slice of candidate word strings. It returns a slice of the candidate words that are anagrams of the target.
+
+For example, given the target `"stone"` and the candidate words `"stone"`, `"tones"`, `"banana"`, `"tons"`, `"notes"`, and `"Seton"`, the returned anagram words are `"tones"`, `"notes"`, and `"Seton"`.
+
+```go
+package anagram
+
+import "core:slice"
+import "core:strings"
+import "core:unicode/utf8"
+
+// Takes a target word and a list of candidate anagram words.
+// Returns allocated slice of strings containing the candidate words
+// that test postiive as anagrams of the target.
+find_anagrams :: proc(word: string, candidates: []string) -> []string {
+	anagrams := make([dynamic]string, 0, len(candidates))
+	
+	letters := letters_in_order(word)
+	defer delete(letters)
+	
+	lc_word := strings.to_lower(word)
+	defer delete(lc_word)
+
+	for candidate in candidates {
+		lc_candidate := strings.to_lower(candidate)
+		defer delete(lc_candidate)
+
+		// ignore exact matches
+		if lc_word == lc_candidate { 
+			continue 
+		}
+
+		candidate_letters := letters_in_order(candidate)
+		defer delete(candidate_letters)
+		
+		if slice.equal(letters, candidate_letters) {
+			// if sorted letters of the target and candidate are equal...
+			append(&anagrams, candidate)
+		}
+	}
+
+	return anagrams[:]
+}
+
+// Returns allocated slice of runes containing 
+// the letters of the word in sorted order.
+letters_in_order :: proc(word: string) -> []rune {
+	lc_word := strings.to_lower(word)
+	defer delete(lc_word)
+
+	letters := utf8.string_to_runes(lc_word)
+	slice.sort(letters)
+	
+	return letters
+}
+```
+
+Here are some tests from this exercise:
+
+```go
+package anagram
+
+import "core:fmt"
+import "core:testing"
+
+expect_slices_match :: proc(t: ^testing.T, actual, expected: []string, loc := #caller_location) {
+	result := fmt.aprintf("%s", actual)
+	exp_str := fmt.aprintf("%s", expected)
+	defer {
+		delete(result)
+		delete(exp_str)
+	}
+	testing.expect_value(t, result, exp_str, loc = loc)
+}
+
+@(test)
+/// description = no matches
+test_no_matches :: proc(t: ^testing.T) {	
+	result := find_anagrams("diaper", 
+        []string{"hello", "world", "zombies", "pants"})
+	defer delete(result)
+
+	expect_slices_match(t, result, []string{})
+}
+
+@(test)
+/// description = detects two anagrams
+test_detects_two_anagrams :: proc(t: ^testing.T) {
+	result := find_anagrams("solemn", 
+        []string{"lemons", "cherry", "melons"})
+	defer delete(result)
+
+    expect_slices_match(t, result, []string{"lemons", "melons"})
+}
+
+@(test)
+/// description = detects anagram
+test_detects_anagram :: proc(t: ^testing.T) {
+	result := find_anagrams("listen", 
+        []string{"enlists", "google", "inlets", "banana"})
+	defer delete(result)
+
+	expect_slices_match(t, result, []string{"inlets"})
+}
+```
+
+
+## Exercise: Clock
+
+This exercise creates a struct `Clock` to represent the time of day and implements some basic operations for procedures.
+
+```go
+package clock
+
+import "core:fmt"
+
+// Implement this struct
+Clock :: struct {
+	mins: int,
+}
+
+// Compile time constant (by convention, has an all uppercase name)
+MINS_PER_DAY :: 24 * 60
+
+create_clock :: proc(hour, minute: int) -> Clock {
+	return Clock{normalize(60 * hour + minute)}
+}
+
+// The @(private) attribute makes this 
+// procedure private to the package.
+@(private)
+normalize :: proc(minutes: int) -> int {
+    // minute values greater than the total 
+    // minutes in a day are assumed to have wrapped
+	return minutes %% MINS_PER_DAY
+}
+
+to_string :: proc(clock: Clock) -> string {
+	h, m := clock.mins / 60, clock.mins % 60
+
+    // the prefix 'a' indicates this print proc allocates
+	return fmt.aprintf("%02d:%02d", h, m)
+}
+
+add :: proc(clock: ^Clock, minutes: int) {
+	clock.mins = normalize(clock.mins + minutes)
+}
+
+subtract :: proc(clock: ^Clock, minutes: int) {
+	add(clock, -minutes)
+}
+
+equals :: proc(clock1, clock2: Clock) -> bool {
+	return clock1.mins == clock2.mins
+}
 ```
 
 
 Here are some tests from this exercise:
 
 ```go
+package clock
+
+import "core:testing"
+
+@(test)
+/// description = Create a new clock with an initial time -> on the hour
+test_create_a_new_clock_with_an_initial_time__on_the_hour :: proc(t: ^testing.T) {
+	clock := create_clock(hour = 8, minute = 0)
+	result := to_string(clock)
+	defer delete(result)
+
+	testing.expect_value(t, result, "08:00")
+}
+
+@(test)
+/// description = Create a new clock with an initial time -> past the hour
+test_create_a_new_clock_with_an_initial_time__past_the_hour :: proc(t: ^testing.T) {
+	clock := create_clock(hour = 11, minute = 9)
+	result := to_string(clock)
+	defer delete(result)
+
+	testing.expect_value(t, result, "11:09")
+}
+
+@(test)
+/// description = Create a new clock with an initial time -> midnight is zero hours
+test_create_a_new_clock_with_an_initial_time__midnight_is_zero_hours :: proc(t: ^testing.T) {
+	clock := create_clock(hour = 24, minute = 0)
+	result := to_string(clock)
+	defer delete(result)
+
+	testing.expect_value(t, result, "00:00")
+}
+
+@(test)
+/// description = Create a new clock with an initial time -> hour rolls over
+test_create_a_new_clock_with_an_initial_time__hour_rolls_over :: proc(t: ^testing.T) {
+	clock := create_clock(hour = 25, minute = 0)
+	result := to_string(clock)
+	defer delete(result)
+
+	testing.expect_value(t, result, "01:00")
+}
+
+@(test)
+/// description = Create a new clock with an initial time -> hour rolls over continuously
+test_create_a_new_clock_with_an_initial_time__hour_rolls_over_continuously :: proc(t: ^testing.T) {
+	clock := create_clock(hour = 100, minute = 0)
+	result := to_string(clock)
+	defer delete(result)
+
+	testing.expect_value(t, result, "04:00")
+}
+
+@(test)
+/// description = Create a new clock with an initial time -> sixty minutes is next hour
+test_create_a_new_clock_with_an_initial_time__sixty_minutes_is_next_hour :: proc(t: ^testing.T) {
+	clock := create_clock(hour = 1, minute = 60)
+	result := to_string(clock)
+	defer delete(result)
+
+	testing.expect_value(t, result, "02:00")
+}
+
+@(test)
+/// description = Create a new clock with an initial time -> minutes roll over
+test_create_a_new_clock_with_an_initial_time__minutes_roll_over :: proc(t: ^testing.T) {
+	clock := create_clock(hour = 0, minute = 160)
+	result := to_string(clock)
+	defer delete(result)
+
+	testing.expect_value(t, result, "02:40")
+}
+
+// etc...
 ```
 
 
-## Exercise: 
+## Exercise: Flatten Array
 
 The procedure
 
 ```go
+package flatten_array
 
+// This union is recursively defined as having 
+// variants i32 and slices of itself.
+// An Item effectively represents an ordered tree of i32 values.
+Item :: union {
+	i32,
+	[]Item,   
+}
+
+// Returns the flattened list of all i32s within an Item. 
+flatten :: proc(input: Item) -> []i32 {
+	final := make([dynamic]i32)
+
+	// Instead of calling flatten recursively, we use a stack 
+	// to track the nested Items as we encounter them.
+	// (While a proc recrusion solution might be a bit 
+	// more familiar and simpler, creating our own stack
+	// instead is often more effecient.)
+	stack := make([dynamic]Item)
+	defer delete(stack)
+
+	// We start the loop with just the original item in the stack.
+	append(&stack, input)
+	
+	for len(stack) > 0 {
+		// The builtin proc pop removes the last 
+		// element of a dynamic array.
+		item := pop(&stack)
+		switch v in item {
+		case i32:
+			// Append the actual ints to the final output array.
+			append(&final, v)
+		case []Item:
+			// Append the Items in reverse because
+			// the stack is consumed last-in-first-out.
+			#reverse for child in v {
+				append(&stack, child)
+			}
+		}
+	}
+
+	return final[:]
+}
 ```
 
 
 Here are some tests from this exercise:
 
 ```go
+package flatten_array
+
+import "core:slice"
+import "core:testing"
+
+@(test)
+/// description = empty
+test_empty :: proc(t: ^testing.T) {
+	result := flatten([]Item{})
+	defer delete(result)
+	testing.expect(t, slice.equal(result, []i32{}))
+}
+
+@(test)
+/// description = flattens a nested array
+test_flattens_a_nested_array :: proc(t: ^testing.T) {
+	result := flatten([]Item{[]Item{[]Item{}}})
+	defer delete(result)
+	expected := []i32{}
+    // The expectf() proc logs a custom message if the check fails.
+	testing.expectf(t, slice.equal(result, expected), "expected %v got %v", expected, result)
+}
 ```
 
 
-## Exercise: 
+## Exercise: Circular Buffer
 
 The procedure
 
 ```go
+package circular_buffer
 
+import "base:runtime"
+
+Ring_Buffer :: struct {
+	elements: []int,
+
+	// Number of slots that are currently occupied
+	size:     int,   
+	
+	// Index of the first element
+	head:    int,   
+
+	// Generally, an allocated data structure should 
+	// reference its allocator so it can be freed or reallocated.
+	allocator: runtime.Allocator,
+}
+
+Ring_Error :: enum {
+	None,
+	BufferEmpty,
+	BufferFull,
+}
+
+new_buffer :: proc(capacity: int, 
+		// The allocator parameter has a default value 
+		// and inferred type (runtime.Allocator)
+		allocator := context.allocator) -> Ring_Buffer {
+	
+	return Ring_Buffer{
+		elements = make([]int, capacity, allocator),
+		allocator = allocator,
+	}
+}
+
+destroy_buffer :: proc(b: ^Ring_Buffer) {
+	delete(b.elements, b.allocator)
+	b.size = 0
+	b.head = 0
+}
+
+clear :: proc(b: ^Ring_Buffer) {
+	b.head = 0
+	b.size = 0
+}
+
+// Pop the head element of the buffer
+// Return .BufferEmpty if buffer is empty
+read :: proc(b: ^Ring_Buffer) -> (int, Ring_Error) {
+	if b.size == 0 {
+		return 0, .BufferEmpty
+	}
+
+	value := b.elements[b.head]
+
+	// advance head (wrap if necessary)
+	b.head = (b.head + 1) % len(b.elements)
+
+	b.size -= 1
+	return value, .None
+}
+
+// Add an element to end of the buffer
+// Return .BufferFull if buffer is full
+write :: proc(b: ^Ring_Buffer, value: int) -> Ring_Error {
+	if b.size == len(b.elements) {
+		return .BufferFull
+	}
+
+	index := (b.head + b.size) % len(b.elements)
+	b.elements[index] = value
+	b.size += 1
+	return .None
+}
+
+// Add an element to end of the buffer 
+// If full, clobber current head and make second element the head.
+overwrite :: proc(b: ^Ring_Buffer, value: int) {
+	err := write(b, value)
+
+	if err == .BufferFull {
+		// if buffer was full...
+
+		// overwrite oldest value and move head
+		b.elements[b.head] = value
+
+		// advance head (wrap if necessary)
+		b.head = (b.head + 1) % len(b.elements)
+	}
+}
 ```
-
-
-Here are some tests from this exercise:
-
-```go
-```
-
-
-## Exercise: 
-
-The procedure
-
-```go
-
-```
-
-
-Here are some tests from this exercise:
-
-```go
-```
-
-
-## Exercise: 
-
-The procedure
-
-```go
-
-```
-
-
-Here are some tests from this exercise:
-
-```go
-```
-
-
-## Exercise: 
-
-The procedure
-
-```go
-
-```
-
-
-Here are some tests from this exercise:
-
-```go
-```
-
 
 ## Exercise: 
 
