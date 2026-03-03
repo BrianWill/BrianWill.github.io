@@ -973,20 +973,179 @@ overwrite :: proc(b: ^Ring_Buffer, value: int) {
 }
 ```
 
-## Exercise: 
+## Exercise: Linked List
 
-The procedure
-
-```go
-
-```
-
-
-Here are some tests from this exercise:
+This example defines a generic doubly-linked list type.
 
 ```go
-```
+package linked_list
 
+List :: struct ($T: typeid) {
+	head: ^Node(T),
+	tail: ^Node(T),
+}
+
+Node :: struct ($T: typeid) {
+	prev:  ^Node(T),
+	next:  ^Node(T),
+	value: T,
+}
+
+Error :: enum {
+	None,
+	Empty_List,
+	Unimplemented,
+}
+
+// Create a new list, optionally with initial elements.
+// The .. on the last parameter indicates this proc can be 
+// called with 0 or more T arguments. The arguments are passed 
+// to the last parameter in a alice of T.
+new_list :: proc($T: typeid, elements: ..T) -> List(T) {
+
+	list := List(T){}
+	for element, index in elements {
+		node := new(Node(T))
+		node.value = element
+		node.prev = list.tail
+		if index == 0 {
+			list.head = node
+		} else {
+			list.tail.next = node
+		}
+		list.tail = node
+	}
+	return list
+}
+
+// Deallocate the list
+destroy_list :: proc(l: ^List($T)) {
+
+	for node := l.head; node != nil; node = node.next {
+		free(node)
+	}
+}
+
+// Insert a value at the head of the list.
+unshift :: proc(l: ^List($T), value: T) {
+
+	node := new(Node(T))
+	node.value = value
+	node.next = l.head
+	if l.head != nil {
+		l.head.prev = node
+	}
+	l.head = node
+	if l.tail == nil {
+		l.tail = node
+	}
+}
+
+// Add a value to the tail of the list
+push :: proc(l: ^List($T), value: T) {
+
+	node := new(Node(T))
+	node.value = value
+	node.prev = l.tail
+	if l.tail != nil {
+		l.tail.next = node
+	}
+	l.tail = node
+	if l.head == nil {
+		l.head = node
+	}
+}
+
+// Remove and return the value at the head of the list.
+shift :: proc(l: ^List($T)) -> (T, Error) {
+
+	if l.head == nil {
+		return 0, .Empty_List
+	}
+
+	shifted_node := l.head
+	defer free(shifted_node)
+
+	if l.head == l.tail {
+		l.head = nil
+		l.tail = nil
+	} else {
+		l.head.next.prev = nil
+		l.head = l.head.next
+	}
+
+	return shifted_node.value, .None
+}
+
+// Remove and return the value at the tail of the list.
+pop :: proc(l: ^List($T)) -> (T, Error) {
+
+	if l.head == nil {
+		return 0, .Empty_List
+	}
+
+	poped_node := l.tail
+	defer free(poped_node)
+
+	if l.head == l.tail {
+		l.head = nil
+		l.tail = nil
+	} else {
+		l.tail.prev.next = nil
+		l.tail = l.tail.prev
+	}
+
+	return poped_node.value, .None
+}
+
+// Reverse the elements in the list (in-place).
+reverse :: proc(l: ^List($T)) {
+
+	// Start from the tail and move up to the head,
+	// while swapping the nodes 'prev' and 'next' pointers.
+	next_node := l.tail
+	for next_node != nil {
+		n := next_node
+		// Increment the node before we modify it so we don't mess
+		// up the loop.
+		next_node = next_node.prev
+		n.prev, n.next = n.next, n.prev
+	}
+	l.head, l.tail = l.tail, l.head
+}
+
+// Returns the number of elements in the list
+count :: proc(l: List($T)) -> int {
+
+	n := 0
+	for node := l.head; node != nil; node = node.next {
+		n += 1
+	}
+	return n
+}
+
+// Remove and free the first element from the list which has the given value.
+// List is unchanged if there is no matching value.
+remove_first :: proc(l: ^List($T), value: T) {
+
+	for node := l.head; node != nil; node = node.next {
+		if node.value == value {
+			defer free(node)
+			if node.prev != nil {
+				node.prev.next = node.next
+			} else {
+				l.head = node.next
+			}
+			if node.next != nil {
+				node.next.prev = node.prev
+			} else {
+				l.tail = node.prev
+			}
+			return
+		}
+	}
+}
+```
 
 ## Exercise: 
 
