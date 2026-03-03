@@ -980,9 +980,12 @@ This example defines a generic doubly-linked list type.
 ```go
 package linked_list
 
+import "base:runtime"
+
 List :: struct ($T: typeid) {
 	head: ^Node(T),
 	tail: ^Node(T),
+	allocator: runtime.Allocator
 }
 
 Node :: struct ($T: typeid) {
@@ -1001,11 +1004,11 @@ Error :: enum {
 // The .. on the last parameter indicates this proc can be 
 // called with 0 or more T arguments. The arguments are passed 
 // to the last parameter in a alice of T.
-new_list :: proc($T: typeid, elements: ..T) -> List(T) {
+new_list :: proc($T: typeid, allocator := context.allocator, elements: ..T) -> List(T) {
 
-	list := List(T){}
+	list := List(T){ allocator = allocator }
 	for element, index in elements {
-		node := new(Node(T))
+		node := new(Node(T), allocator)
 		node.value = element
 		node.prev = list.tail
 		if index == 0 {
@@ -1022,14 +1025,14 @@ new_list :: proc($T: typeid, elements: ..T) -> List(T) {
 destroy_list :: proc(l: ^List($T)) {
 
 	for node := l.head; node != nil; node = node.next {
-		free(node)
+		free(node, l.allocator)
 	}
 }
 
 // Insert a value at the head of the list.
 unshift :: proc(l: ^List($T), value: T) {
 
-	node := new(Node(T))
+	node := new(Node(T), l.allocator)
 	node.value = value
 	node.next = l.head
 	if l.head != nil {
@@ -1044,7 +1047,7 @@ unshift :: proc(l: ^List($T), value: T) {
 // Add a value to the tail of the list
 push :: proc(l: ^List($T), value: T) {
 
-	node := new(Node(T))
+	node := new(Node(T), l.allocator)
 	node.value = value
 	node.prev = l.tail
 	if l.tail != nil {
@@ -1064,7 +1067,7 @@ shift :: proc(l: ^List($T)) -> (T, Error) {
 	}
 
 	shifted_node := l.head
-	defer free(shifted_node)
+	defer free(shifted_node, l.allocator)
 
 	if l.head == l.tail {
 		l.head = nil
@@ -1085,7 +1088,7 @@ pop :: proc(l: ^List($T)) -> (T, Error) {
 	}
 
 	poped_node := l.tail
-	defer free(poped_node)
+	defer free(poped_node, l.allocator)
 
 	if l.head == l.tail {
 		l.head = nil
@@ -1130,7 +1133,7 @@ remove_first :: proc(l: ^List($T), value: T) {
 
 	for node := l.head; node != nil; node = node.next {
 		if node.value == value {
-			defer free(node)
+			defer free(node, l.allocator)
 			if node.prev != nil {
 				node.prev.next = node.next
 			} else {
@@ -1146,124 +1149,3 @@ remove_first :: proc(l: ^List($T), value: T) {
 	}
 }
 ```
-
-## Exercise: 
-
-The procedure
-
-```go
-
-```
-
-
-Here are some tests from this exercise:
-
-```go
-```
-
-
-## Exercise: 
-
-The procedure
-
-```go
-
-```
-
-
-Here are some tests from this exercise:
-
-```go
-```
-
-
-## Exercise: 
-
-The procedure
-
-```go
-
-```
-
-
-Here are some tests from this exercise:
-
-```go
-```
-
-
-## Exercise: 
-
-The procedure
-
-```go
-
-```
-
-
-Here are some tests from this exercise:
-
-```go
-```
-
-
-## Exercise: 
-
-The procedure
-
-```go
-
-```
-
-
-Here are some tests from this exercise:
-
-```go
-```
-
-
-## Exercise: 
-
-The procedure
-
-```go
-
-```
-
-
-Here are some tests from this exercise:
-
-```go
-```
-
-
-## Exercise: 
-
-The procedure
-
-```go
-
-```
-
-
-Here are some tests from this exercise:
-
-```go
-```
-
-
-## Exercise: 
-
-The procedure
-
-```go
-
-```
-
-
-Here are some tests from this exercise:
-
-```go
-```
-
-
