@@ -114,60 +114,35 @@ package pangram
 
 is_pangram :: proc(str: string) -> bool {
 
-	// defines Alphabet as a bit set type which has a bit
+	// Defines Alphabet as a bit set type which has a bit
 	// for every character in the range 'a' up to (and including) 'z'
 	Alphabet :: bit_set['a' ..= 'z']
 
-    // zero value of a bit set is empty (all bits unset)
+    // The zero value of a bit set is empty (all bits unset)
     expected: Alphabet
 	found: Alphabet
 
-    // an Alphabet literal with all bits set
+    // An Alphabet literal with all bits set
 	expected = Alphabet {
-		'a',
-		'b',
-		'c',
-		'd',
-		'e',
-		'f',
-		'g',
-		'h',
-		'i',
-		'j',
-		'k',
-		'l',
-		'm',
-		'n',
-		'o',
-		'p',
-		'q',
-		'r',
-		's',
-		't',
-		'u',
-		'v',
-		'w',
-		'x',
-		'y',
-		'z',
+		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+		'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 	}
 
-	// alternatively, we can get the full set 
+	// Alternatively, we can get the full set 
     // by doing a logical not operation on the empty set
 	expected = ~Alphabet{}  // same result as prior assignment
 
 	UPPER_TO_LOWER_DIFF :: 'a' - 'A'
 
-	// for every rune in the string
+	// For every rune in the string
 	// (a "rune" is an unsigned integer representing a Unicode code point)
 	for r in str {
 		if r >= 'a' && r <= 'z' {     // if lowercase...
-			// adding two bit sets returns their union,
+			// Adding two bit sets returns their union,
 			// so this is effectively setting the bit for 'r' in 'found'
 			found += Alphabet{r}
 		} else if r >= 'A' && r <= 'Z' {   // if uppercase...
 			found += Alphabet{r + UPPER_TO_LOWER_DIFF}
-			// found += Alphabet{r - 'A' + 'a'}
 		} else {  // if not a letter...
 			continue
 		}
@@ -218,7 +193,7 @@ import "core:unicode/utf8"
 
 reverse :: proc(str: string) -> string {
 	// A Grapheme is a cluster of one or more Unicode code points that 
-	// represent what a user perceives as an individual character. 
+	// represents what a user perceives as an individual character. 
 	// (Not all Unicode code points represent individual, 
     // complete renderable characters.)
 	graphemes: [dynamic]utf8.Grapheme
@@ -305,7 +280,7 @@ test_grapheme_clusters :: proc(t: ^testing.T) {
 
 ## Exercise: Word Count
 
-The procedure `count_word` takes a string and returns a map of words and their count of occurrences in the string.
+The procedure `count_words` takes a string and returns a map of words and their count of occurrences in the string.
 
 - A word consists of adjacent ASCII letters, numerals, and apostraphes.
 - Words are case insensitive.
@@ -323,14 +298,14 @@ package word_count
 import "core:strings"
 
 Word_Counts :: struct {
-	_map: map[string]u32,  // _ prefix to avoid clash with reserved word
+	data: map[string]u32,
 	
 	// The string from which all the keys are sliced. 
-	// We need this when we we free.
+	// We need this when we free.
 	keys_str: string,   
 }
 
-count_word :: proc(input: string) -> Word_Counts {
+count_words :: proc(input: string) -> Word_Counts {
 	
 	// to_lower() returns a newly allocated string
 	// We want a copy of the parameter string anyway because
@@ -344,10 +319,11 @@ count_word :: proc(input: string) -> Word_Counts {
 	
 	word_counts := Word_Counts{ keys_str = input }
 
-	// Array of the delimiter characters.
-	// The [?] syntax makes the array size be inferred 
-	// from the number of elements in the literal.
-	delims := [?]string{" ", ",", ".", "\n"}
+	// A slice of the delimiter characters 
+	// we'll use to split the string.
+	// (A slice literal points to content of a 
+	// statically-allocated array.)
+	delims := []string{" ", ",", ".", "\n"}
 
 	// Most commonly, the in-clause of a for loop is an expression 
     // which returns a collection, enum, or string, and then iterates
@@ -362,7 +338,7 @@ count_word :: proc(input: string) -> Word_Counts {
 	// 1. The returned string is assigned to str 
 	// 2. If the returned bool is false, the next iteration is 
     // skipped and the loop ends.
-	for str in strings.split_multi_iterate(&input, delims[:]) {
+	for str in strings.split_multi_iterate(&input, delims) {
 
 		// trim() returns a string which is a slice of the original 
 		word := strings.trim(str, "'\"()!&@$%^:")
@@ -376,15 +352,15 @@ count_word :: proc(input: string) -> Word_Counts {
 		// operation first allocates the map.
 		// If the key does not yet exist, it is created 
 		// and initialized to 0 before the += operation.
-		word_counts._map[word] += 1
+		word_counts.data[word] += 1
 	}
 
 	return word_counts
 }
 
-delete_map_and_key :: proc(words: Word_Counts) {
+delete_word_counts :: proc(words: Word_Counts) {
 	delete(words.keys_str)
-	delete(words._map)
+	delete(words.data)
 }
 ```
 
@@ -401,12 +377,12 @@ test_ignore_punctuation :: proc(t: ^testing.T) {
 	input := "car: carpet as java: javascript!!&@$%^&"
 	word_counts := count_word(input)
 	defer delete_word_counts(word_counts)
-	testing.expect_value(t, len(word_counts._map), 5)
-	testing.expect_value(t, word_counts._map["car"], 1)
-	testing.expect_value(t, word_counts._map["carpet"], 1)
-	testing.expect_value(t, word_counts._map["as"], 1)
-	testing.expect_value(t, word_counts._map["java"], 1)
-	testing.expect_value(t, word_counts._map["javascript"], 1)
+	testing.expect_value(t, len(word_counts.data), 5)
+	testing.expect_value(t, word_counts.data["car"], 1)
+	testing.expect_value(t, word_counts.data["carpet"], 1)
+	testing.expect_value(t, word_counts.data["as"], 1)
+	testing.expect_value(t, word_counts.data["java"], 1)
+	testing.expect_value(t, word_counts.data["javascript"], 1)
 }
 
 @(test)
@@ -415,10 +391,10 @@ test_include_numbers :: proc(t: ^testing.T) {
 	input := "testing, 1, 2 testing"
 	word_counts := count_word(input)
 	defer delete_word_counts(word_counts)
-	testing.expect_value(t, len(word_counts._map), 3)
-	testing.expect_value(t, word_counts._map["testing"], 2)
-	testing.expect_value(t, word_counts._map["1"], 1)
-	testing.expect_value(t, word_counts._map["2"], 1)
+	testing.expect_value(t, len(word_counts.data), 3)
+	testing.expect_value(t, word_counts.data["testing"], 2)
+	testing.expect_value(t, word_counts.data["1"], 1)
+	testing.expect_value(t, word_counts.data["2"], 1)
 }
 
 @(test)
@@ -427,15 +403,15 @@ test_with_apostrophes :: proc(t: ^testing.T) {
 	input := "'First: don't laugh. Then: don't cry. You're getting it.'"
 	word_counts := count_word(input)
 	defer delete_word_counts(word_counts)
-	testing.expect_value(t, len(word_counts._map), 8)
-	testing.expect_value(t, word_counts._map["first"], 1)
-	testing.expect_value(t, word_counts._map["don't"], 2)
-	testing.expect_value(t, word_counts._map["laugh"], 1)
-	testing.expect_value(t, word_counts._map["then"], 1)
-	testing.expect_value(t, word_counts._map["cry"], 1)
-	testing.expect_value(t, word_counts._map["you're"], 1)
-	testing.expect_value(t, word_counts._map["getting"], 1)
-	testing.expect_value(t, word_counts._map["it"], 1)
+	testing.expect_value(t, len(word_counts.data), 8)
+	testing.expect_value(t, word_counts.data["first"], 1)
+	testing.expect_value(t, word_counts.data["don't"], 2)
+	testing.expect_value(t, word_counts.data["laugh"], 1)
+	testing.expect_value(t, word_counts.data["then"], 1)
+	testing.expect_value(t, word_counts.data["cry"], 1)
+	testing.expect_value(t, word_counts.data["you're"], 1)
+	testing.expect_value(t, word_counts.data["getting"], 1)
+	testing.expect_value(t, word_counts.data["it"], 1)
 }
 
 // etc...
@@ -663,7 +639,7 @@ test_detects_anagram :: proc(t: ^testing.T) {
 
 ## Exercise: Clock
 
-This exercise creates a struct `Clock` to represent the time of day and implements some basic operations for procedures.
+This exercise creates a struct `Clock` to represent the time of day and implements some basic time operations as procedures.
 
 ```go
 package clock
