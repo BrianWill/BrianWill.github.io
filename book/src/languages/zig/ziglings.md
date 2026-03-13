@@ -1,6 +1,16 @@
 # Zig Intro - Code Examples (Ziglings)
 
-![Under construction](../construction.gif)
+![Under construction](../../construction.gif)
+
+This text is a supplement to a [video](https://ziglang.org/) that introduces the Zig programming language by walking through small code exercises from the [Ziglings project](https://codeberg.org/ziglings/exercises/#ziglings).
+
+This walkthrough assumes the audience has reasonable familiarity with C or other similar languages (*e.g.* C++, Rust, Odin, or Go). If you're new to this kind of programming, it may help to first check out my [Odin Introduction](odin_data_types.md).
+
+> [!NOTE] Not all Ziglings exercises are included. Some exercises are skipped because they are redundant. Several others are skipped because they cover `async/await`, a feature that is not yet available in the main Zig compiler.
+
+The Ziglings exercises present broken code examples that need fixes to pass their tests, but here we present just completed solutions. Rather than focus on the particular problems being solved and the logic of their solutions, the video commentary and the code comments in this text focus just on the Zig language features introduced by each exercise.
+
+> [!WARNING] I strongly recommend working through the Ziglings exercises yourself at some point, say, one or two weeks after watching the video and reading this text. 
 
 ### 003_assignment.zig
 
@@ -241,7 +251,7 @@ pub fn main() void {
     //        SomeErrorSet ! SomePayloadType
     // ...where the "payload" can be any type (including another error set).
 
-    // The varaible's type here is an error 
+    // The variable's type here is an error 
     // union joining MyNumberError and u8,
     // so this variable can be assigned any 
     // MyNumberError value or any u8 value.
@@ -1089,7 +1099,7 @@ pub fn main() void {
     // A "many"-pointer-to-const-u8
     const manyptr: [*]const u8 = ptr;
 
-    // Index the manypointer like an array
+    // Index the many-item pointer like an array
     const char: u8 = manyptr[5]; // 'F'
 
     // Get slice from a many pointer
@@ -1789,8 +1799,9 @@ pub fn main() void {
     print("duct: {}\n", .{isADuck(duct)}); // false
 }
 
-// Function compiled once for each unique
-// type of value passed to 'possible_duck'
+// An anytype parameter takes an argument of any type.
+// Function is compiled once for each unique
+// type of value passed to 'possible_duck'.
 fn isADuck(possible_duck: anytype) bool {
     const Type = @TypeOf(possible_duck);
     const walks_like_duck = @hasDecl(Type, "waddle");
@@ -1830,7 +1841,12 @@ pub fn main() void {
     const fields = @typeInfo(Narcissus).@"struct".fields;
 
     // An 'inline for' unrolls the loop at compile time
+    // (meaning the body is repeated for each iteration)
+    // Inline allowed here because fields is comptime
     inline for (fields) |field| {
+        // This condition is evaluable at comptime,
+        // so the if body is only included in runtime
+        // when the condition is true.
         if (field.type != void) {
             print(" {s}", .{field.name});
         }
@@ -1838,7 +1854,6 @@ pub fn main() void {
 
     print(".\n", .{});
 }
-
 ```
 
 
@@ -1854,10 +1869,14 @@ pub fn main() void {
 
     comptime var i = 0;
 
-    // unrolls at compile time
+    // Loop unrolled at compile time
+    // (note the header expressions are evaluable at comptime)
     inline while (i < instructions.len) : (i += 3) {
         const digit = instructions[i + 1] - '0';
 
+        // This switch is evaluable at comptime,
+        // so only one case baked into runtime 
+        // of each loop iteration.
         switch (instructions[i]) {
             '+' => value += digit,
             '-' => value -= digit,
@@ -1868,7 +1887,6 @@ pub fn main() void {
 
     print("{}\n", .{value});
 }
-
 ```
 
 ### 073_comptime8.zig
@@ -1876,7 +1894,6 @@ pub fn main() void {
 ```rust
 const print = @import("std").debug.print;
 
-//const llama_count = 5;
 const llamas = [5]u32{ 5, 10, 15, 20, 25 };
 
 pub fn main() void {
@@ -1885,24 +1902,27 @@ pub fn main() void {
 }
 
 fn getLlama(comptime i: usize) u32 {
-    // execute expression at comptime
+    // Execute expression at comptime
+    // (allowed when for expressions that 
+    // include only comptime values)
     comptime assert(i < llamas.len);
+
     return llamas[i];
 }
 
 fn assert(ok: bool) void {
     if (!ok) unreachable;
 }
-
 ```
 
 ### 074_comptime9.zig
 
 ```rust
-// the scope outside of functions is implicitly comptime
+// File scope (outside of any function) is implicitly comptime
 
 const print = @import("std").debug.print;
-const llamas = makeLlamas(5);
+
+const llamas = makeLlamas(5);  // call is impliticly comptime
 
 fn makeLlamas(comptime count: usize) [count]u8 {
     var temp: [count]u8 = undefined;
@@ -1918,7 +1938,6 @@ fn makeLlamas(comptime count: usize) [count]u8 {
 pub fn main() void {
     print("My llama value is {}.\n", .{llamas[2]});
 }
-
 ```
 
 
@@ -1929,18 +1948,22 @@ const print = @import("std").debug.print;
 const sentinel = @import("std").meta.sentinel;
 
 pub fn main() void {
-    // zero-terminated array of u32 values
+    // "sentinal-terminated array" of u32 values
+    // (0 is the sentinel)
+    // This array has 7 u32 values, and the last value is 0.
+    // Its .len is 6, so last valid index is 5.
     var nums = [_:0]u32{ 1, 2, 3, 4, 5, 6 };
 
-    // zero-terminated many-item pointer
+    // "sentinal-terminated many-item pointer" of u32 values
+    // (0 is the sentinel)
+    // If ptr's type used a terminator other than 0,
+    // this coercion would be illegal.
     const ptr: [*:0]u32 = &nums;
 
     nums[3] = 0;
 
     printSequence(nums);
     printSequence(ptr);
-
-    print("\n", .{});
 }
 
 fn printSequence(my_seq: anytype) void {
@@ -1955,6 +1978,10 @@ fn printSequence(my_seq: anytype) void {
             }
         },
         .pointer => {
+            // if a pointer...
+
+            // The sentinel function from the meta package 
+            // returns the sentinal value of the type (in this case 0)
             const my_sentinel = sentinel(@TypeOf(my_seq));
             print("Many-item pointer:", .{});
 
@@ -1968,7 +1995,6 @@ fn printSequence(my_seq: anytype) void {
     }
     print("\n", .{});
 }
-
 ```
 
 
@@ -1996,9 +2022,9 @@ const WeirdContainer = struct {
 
 pub fn main() void {
     const foo = WeirdContainer{
-        // a string literal is a "constant pointer to a
+        // A string literal is a "constant pointer to a
         // zero-terminated (null-terminated) fixed-size array of u8"
-        // here coerced to [*]const u8
+        // Here the literal is coerced to [*]const u8
         .data = "Weird Data!",
         .length = 11,
     };
@@ -2007,7 +2033,6 @@ pub fn main() void {
 
     print("{s}\n", .{printable});
 }
-
 ```
 
 ### 078_sentinels3.zig
@@ -2018,11 +2043,11 @@ const print = @import("std").debug.print;
 pub fn main() void {
     const data: [*]const u8 = "Weird Data!";
 
-    // @ptrCast return type inferred from context
+    // @ptrCast returns type inferred from context
+    // (here the assignment target)
     const printable: [*:0]const u8 = @ptrCast(data);
     print("{s}\n", .{printable});
 }
-
 ```
 
 ### 079_quoted_identifiers.zig
@@ -2031,6 +2056,8 @@ pub fn main() void {
 const print = @import("std").debug.print;
 
 pub fn main() void {
+    // The @"foo" syntax is a quoted identifier.
+    // Allows for identifier names that otherwise would be illegal.
     const @"55_cows": i32 = 55;
     const @"isn't true": bool = false;
 
@@ -2039,7 +2066,6 @@ pub fn main() void {
         @"isn't true",
     });
 }
-
 ```
 
 
@@ -2048,9 +2074,9 @@ pub fn main() void {
 ```rust
 const print = @import("std").debug.print;
 
-// generates a type
+// This function returns a generated struct type
 fn Circle(comptime T: type) type {
-    // an anonymous struct *type* (not a literal)
+    // An anonymous struct *type* (not a literal)
     return struct {
         center_x: T,
         center_y: T,
@@ -2059,12 +2085,14 @@ fn Circle(comptime T: type) type {
 }
 
 pub fn main() void {
+    // Define circle1 to be a struct type where T is i32
     const circle1 = Circle(i32){
         .center_x = 25,
         .center_y = 70,
         .radius = 15,
     };
 
+    // Define circle1 to be a struct type where T is f32
     const circle2 = Circle(f32){
         .center_x = 25.234,
         .center_y = 70.999,
@@ -2085,7 +2113,6 @@ pub fn main() void {
         circle2.radius,
     });
 }
-
 ```
 
 
@@ -2095,7 +2122,8 @@ pub fn main() void {
 const print = @import("std").debug.print;
 
 pub fn main() void {
-    // anonymous struct literals
+    // Anonymous struct literals can have any 
+    // combination of field names and values
     printCircle(.{
         .center_x = @as(u32, 205),
         .center_y = @as(u32, 187),
@@ -2106,11 +2134,12 @@ pub fn main() void {
         .center_x = @as(f32, 205),
         .center_y = @as(f32, 187),
         .radius = @as(u8, 12),
-        .something = 5,
+        .something = 5,  // printCircle won't use this field, but that's OK
     });
 }
 
-// accepts any struct with the fields .center_x, .center_y, .radius
+// Accepts any struct with fields .center_x, .center_y, .radius
+// having types that can be printed as {} in the format string
 fn printCircle(circle: anytype) void {
     print("x:{} y:{} radius:{}\n", .{
         circle.center_x,
@@ -2118,7 +2147,6 @@ fn printCircle(circle: anytype) void {
         circle.radius,
     });
 }
-
 ```
 
 ### 082_anonymous_structs3.zig
@@ -2127,7 +2155,7 @@ fn printCircle(circle: anytype) void {
 const print = @import("std").debug.print;
 
 pub fn main() void {
-    // implicit numbered field names: .0, .1, .2, .3
+    // Implicit numbered field names: .0, .1, .2, .3
     const foo = .{
         true,
         false,
@@ -2139,8 +2167,10 @@ pub fn main() void {
 }
 
 fn printTuple(tuple: anytype) void {
+    // []const builtin.Type.StructField
     const fields = @typeInfo(@TypeOf(tuple)).@"struct".fields;
 
+    // Iterate over each field
     inline for (fields) |field| {
         print("\"{s}\"({any}):{any} \n", .{
             field.name,
@@ -2149,7 +2179,6 @@ fn printTuple(tuple: anytype) void {
         });
     }
 }
-
 ```
 
 ### 083_anonymous_lists.zig
@@ -2158,11 +2187,10 @@ fn printTuple(tuple: anytype) void {
 const print = @import("std").debug.print;
 
 pub fn main() void {
-    // coerced tuple into array
+    // Coerced tuple into array
     const hello: [5]u8 = .{ 'h', 'e', 'l', 'l', 'o' };
     print("I say {s}!\n", .{hello});
 }
-
 ```
 
 
@@ -2171,11 +2199,14 @@ pub fn main() void {
 ```rust
 const std = @import("std");
 
+// Each insect type has a print method
+
 const Ant = struct {
     still_alive: bool,
 
     pub fn print(self: Ant) void {
-        std.debug.print("Ant is {s}.\n", .{if (self.still_alive) "alive" else "dead"});
+        std.debug.print("Ant is {s}.\n", 
+            .{if (self.still_alive) "alive" else "dead"});
     }
 };
 
@@ -2183,12 +2214,11 @@ const Bee = struct {
     flowers_visited: u16,
 
     pub fn print(self: Bee) void {
-        std.debug.print("Bee visited {} flowers.\n", .{self.flowers_visited});
+        std.debug.print("Bee visited {} flowers.\n", 
+            .{self.flowers_visited});
     }
 };
 
-// Here's the new grasshopper. Notice how we've also added print
-// methods to each insect.
 const Grasshopper = struct {
     distance_hopped: u16,
 
@@ -2204,8 +2234,10 @@ const Insect = union(enum) {
 
     pub fn print(self: Insect) void {
         switch (self) {
-            // at compile time, generates case for every remaining member of Insect
-            // (so here, triggers compile error if a member doesn't have .print())
+            // At compiletime, generates a case
+            // for every member of Insect
+            // (compile error if a member doesn't
+            //  have a print method)
             inline else => |case| return case.print(),
         }
     }
@@ -2223,7 +2255,6 @@ pub fn main() !void {
         Insect.print(insect);
     }
 }
-
 ```
 
 
@@ -2232,14 +2263,28 @@ pub fn main() !void {
 ```rust
 const std = @import("std");
 
-// import C code
-const c = @cImport({
-    @cInclude("unistd.h");
-});
+// @cImport parses an expression of C code and imports 
+// the functions, types, variables, and compatible 
+// macro definitions into a new empty struct type,
+//  and then returns that type.
+const c: type = @cImport(
+    // Block of code passed as expression to @cImport
+    { 
+        // Appends "#include <$path>\n" to the c_import temporary buffer
+        // (this function can only be called inside @cImport expression)
+        @cInclude("unistd.h");
+    }
+);
 
 pub fn main() void {
-    // call C function
-    // "pub extern fn write(_Filehandle: c_int, _Buf: ?*const anyopaque, _MaxCharCount: c_uint) c_int;"
+    // Call the imported c function which has this Zig signature:
+    //
+    //  pub extern fn write(
+    //      _Filehandle: c_int, 
+    //      _Buf: ?*const anyopaque, 
+    //      _MaxCharCount: c_uint) 
+    //      c_int;
+    //
     const c_res = c.write(2, "Hello C from Zig!", 17);
 
     std.debug.print(" - C result is {d} chars written.\n", .{c_res});
@@ -2247,7 +2292,6 @@ pub fn main() void {
 
 // "-lc" tells Zig compiler to include C libraries
 // e.g. "zig run -lc exercises/093_hello_c.zig".
-
 ```
 
 ### 094_c_math.zig
@@ -2255,19 +2299,28 @@ pub fn main() void {
 ```rust
 const std = @import("std");
 
-const c = @cImport({
-    @cInclude("math.h");
-});
+const c = @cImport(
+    {
+        @cInclude("math.h");
+    }
+);
 
 pub fn main() !void {
     const angle = 765.2;
     const circle = 360;
 
-    // call C mod
-    // "pub extern fn fmod(_X: f64, _Y: f64) f64;"
+    // Call C mod function having this Zig signature:
+    //
+    //  pub extern fn fmod(
+    //      _X: f64,
+    //      _Y: f64) 
+    //      f64;
+    //
     const result = c.fmod(angle, circle);
 
-    std.debug.print("The normalized angle of {d: >3.1} degrees is {d: >3.1} degrees.\n", .{ angle, result });
+    std.debug.print(
+        "The normalized angle of {d: >3.1} degrees is {d: >3.1} degrees.\n", 
+            .{ angle, result });
 }
 
 ```
@@ -2287,7 +2340,6 @@ pub fn main() void {
 
     std.debug.print("\n", .{});
 }
-
 ```
 
 
@@ -2307,19 +2359,22 @@ fn runningAverage(arr: []const f64, avg: []f64) void {
 }
 
 pub fn main() !void {
-    // pretend this was defined by reading in user input
+    // Pretend this was defined by reading in user input
     const arr: []const f64 = &[_]f64{ 0.3, 0.2, 0.1, 0.1, 0.4 };
 
-    // initialize the allocator
+    // Initialize new arena allocator derived from std.heap.page_allocator
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
 
-    // free the memory on exit
+    // Defer freeing the whole arena's memory
     defer arena.deinit();
 
-    // initialize the allocator
+    // Get Allocator from ArenaAllocator
+    // (ArenaAllocator is the specific allocator type, but we 
+    // wrap as an Allocator to use the general Allocator functions)
     const allocator = arena.allocator();
 
-    // allocate memory for this array
+    // Allocate a block of memory 
+    // This call returns *[arr.len]f64, which we coerce to []f64.
     const avg: []f64 = try allocator.create([arr.len]f64);
 
     runningAverage(arr, avg);
@@ -2332,9 +2387,7 @@ pub fn main() !void {
 
 // For more details on memory allocation and the different types of
 // memory allocators, see https://www.youtube.com/watch?v=vHWiDx_l4V0
-
 ```
-
 
 ### 098_bit_manipulation2.zig
 
@@ -2344,22 +2397,36 @@ const ascii = std.ascii;
 const print = std.debug.print;
 
 pub fn main() !void {
-    print("Is this a pangram? {}!\n", .{isPangram("The quick brown fox jumps over the lazy dog.")});
+    print("Is this a pangram? {}!\n", 
+        .{isPangram("The quick brown fox jumps over the lazy dog.")});
 }
 
 fn isPangram(str: []const u8) bool {
-    if (str.len < 26) return false;
+    if (str.len < 26) {
+        return false;
+    }
 
     var bits: u32 = 0;
 
     for (str) |c| {
         if (ascii.isAscii(c) and ascii.isAlphabetic(c)) {
+            // |= performs a bitwise 'or'
+            //
+            // When shifting a u32 with <<, the right operand must be a u5,
+            // (because 2^5 is the number of bits in a u32)
+            // To make the right operand a u5, we use @truncate, 
+            // which truncates the u8 to u5 (the return
+            // type is inferred from the context)
+            //
+            // Because bits is a u32, it can only be or'd with another
+            // u32. By itself, the integer literal could be any integer type,
+            // but @truncate needs it to be a u32 to correclty infer its return type.
             bits |= @as(u32, 1) << @truncate(ascii.toLower(c) - 'a');
         }
     }
+
     return bits == 0x3ff_ffff;
 }
-
 ```
 
 ### 099_formatting.zig
@@ -2374,6 +2441,8 @@ pub fn main() !void {
     // header
     print("\n   |", .{});
     for (0..size) |n| {
+        // format as a decimal (d), right-aligned (>), 
+        // and minimum width 3
         print("{d:>3} ", .{n + 1});
     }
     print("\n", .{});
@@ -2387,6 +2456,8 @@ pub fn main() !void {
 
     // rows
     for (0..size) |a| {
+        // format as a decimal (d), right-aligned (>), 
+        // and minimum width 2
         print("{d:>2} |", .{a + 1});
         for (0..size) |b| {
             print("{d:3} ", .{(a + 1) * (b + 1)});
@@ -2394,7 +2465,6 @@ pub fn main() !void {
         print("\n\n", .{});
     }
 }
-
 ```
 
 ### 100_for4.zig
@@ -2407,7 +2477,8 @@ pub fn main() void {
     const hex_nums = [_]u8{ 0xb, 0x2a, 0x77 };
     const dec_nums = [_]u8{ 11, 42, 119 };
 
-    // allowed because both are same length
+    // Iterate through both arrays in tandem
+    // (Allowed because both are same length)
     for (hex_nums, dec_nums) |hex, dec| {
         if (hex != dec) {
             print("Uh oh! Found a mismatch: {d} vs {d}\n", .{ hex, dec });
@@ -2417,9 +2488,7 @@ pub fn main() void {
 
     print("Arrays match!\n", .{});
 }
-
 ```
-
 
 ### 101_for5.zig
 
@@ -2427,7 +2496,6 @@ pub fn main() void {
 const std = @import("std");
 const print = std.debug.print;
 
-// This is the same character role enum we've seen before.
 const Role = enum {
     wizard,
     thief,
@@ -2440,8 +2508,8 @@ pub fn main() void {
     const gold = [4]u16{ 25, 11, 5, 7392 };
     const experience = [4]u8{ 40, 17, 55, 21 };
 
-    // sizes must match
-    // (range implicitly same size as the arrays)
+    // Iterate over multiple arrays in tandem (sizes must match)
+    // The range size will automatically match the others.
     for (roles, gold, experience, 1..) |c, g, e, i| {
         const role_name = switch (c) {
             .wizard => "Wizard",
@@ -2458,7 +2526,6 @@ pub fn main() void {
         });
     }
 }
-
 ```
 
 
@@ -2473,6 +2540,8 @@ const testing = std.testing;
 fn add(a: f16, b: f16) f16 {
     return a + b;
 }
+
+// A test fails if it returns an error.
 
 test "add" {
     try testing.expect(add(41, 1) == 42);
@@ -2503,7 +2572,6 @@ test "divide" {
 
     try testing.expectError(error.DivisionByZero, divide(15, 0));
 }
-
 ```
 
 ### 103_tokenization.zig
@@ -2514,15 +2582,17 @@ const print = std.debug.print;
 
 pub fn main() !void {
 
-    // multi-line string
+    // Multi-line string
     const poem =
         \\My name is Ozymandias, King of Kings;
         \\Look on my Works, ye Mighty, and despair!
     ;
 
-    var it = std.mem.tokenizeAny(u8, poem, ",\n ;!");
+    // Returns a TokenIterator(u8, DelimiterType.any),
+    // which splits the poem by the delimiters
+    const delimiters = ",\n ;!";
+    var it = std.mem.tokenizeAny(u8, poem, delimiters);
 
-    // print and count the words
     var cnt: usize = 0;
     while (it.next()) |word| {
         cnt += 1;
@@ -2539,52 +2609,63 @@ pub fn main() !void {
 ```rust
 const std = @import("std");
 
+const total_time = 5;
+
 pub fn main() !void {
     std.debug.print("Starting work...\n", .{});
 
-    // subscope for our defers
+    // Create a block so that the defers inside exit just this subscope.
     {
-        // spawn thread with parameter 1
+        // Spawn thread with parameter value 1
         const handle = try std.Thread.spawn(.{}, thread_function, .{1});
-        // join() waits for thread to complete then cleans up the thread
+        // join() waits for thread to complete, then cleans up the thread
         defer handle.join();
 
+        // Spawn thread with parameter value 2
         const handle2 = try std.Thread.spawn(.{}, thread_function, .{2});
         defer handle2.join();
 
+        // Spawn thread with parameter value 3
         const handle3 = try std.Thread.spawn(.{}, thread_function, .{3});
         defer handle3.join();
 
-        // continue some work on main thread
+        // While the threads spawned above run, we can do
+        // other business on main thread...
+        // (though in this case we're just sleeping for total_time seconds)
         var io_instance: std.Io.Threaded = .init_single_threaded;
         const io = io_instance.io();
-        try io.sleep(std.Io.Duration.fromSeconds(4), .awake);
+        try io.sleep(std.Io.Duration.fromSeconds(total_time), .awake);
 
-        std.debug.print("Main thread after waiting.\n", .{});
+        std.debug.print("main thread: finished.\n", .{});
     }
 
     // only reach here after all the joins
     std.debug.print("Zig is cool!\n", .{});
 }
 
-// 'delay' receives the thread param
+// When used as function for new thread, the thread param is passed to 'delay'
 fn thread_function(delay: usize) !void {
-    // .init_single_threaded is an instance of the file struct but with member values that differ from the default
+    // .init_single_threaded is an instance of the file struct but with
+    // member values that differ from the default
     var io_instance: std.Io.Threaded = .init_single_threaded;
     const io = io_instance.io();
 
-    // sleep to delay start
+    // Sleep to delay start
     // (isize is like usize but signed)
-    // (sleep expects a std.Io.Clock enum value, so .awake is understood as std.Io.Clock.awake)
-    try io.sleep(std.Io.Duration.fromSeconds(1 * @as(isize, @intCast(delay))), .awake);
+    // (sleep expects a std.Io.Clock enum value,
+    // so .awake is understood as std.Io.Clock.awake)
+    const seconds = 1 * @as(isize, @intCast(delay));
+    try io.sleep(std.Io.Duration.fromSeconds(seconds), .awake);
+
+    // Print message after delay
     std.debug.print("thread {d}: {s}\n", .{ delay, "started." });
 
-    // sleep to fake work
-    const work_time = 5 - delay;
+    // Sleep for the rest of the total_time
+    const work_time = total_time - delay;
     try io.sleep(std.Io.Duration.fromSeconds(@intCast(work_time)), .awake);
+
     std.debug.print("thread {d}: {s}\n", .{ delay, "finished." });
 }
-
 ```
 
 
@@ -2598,24 +2679,28 @@ pub fn main() !void {
     var pi_plus: f64 = 0;
     var pi_minus: f64 = 0;
 
+    // We pass pointers to these threads
     {
-        const handle1 = try std.Thread.spawn(.{}, thread_pi, .{ &pi_plus, 5, count });
+        const handle1 = try std.Thread.spawn(.{}, thread_pi, 
+            .{ &pi_plus, 5, count });
         defer handle1.join();
 
-        const handle2 = try std.Thread.spawn(.{}, thread_pi, .{ &pi_minus, 3, count });
+        const handle2 = try std.Thread.spawn(.{}, thread_pi, 
+            .{ &pi_minus, 3, count });
         defer handle2.join();
     }
+    // We're reading value from pointer that was computed by the spawned threads
+    // (safe here because the two threads have been joined already)
     std.debug.print("PI ≈ {d:.8}\n", .{4 + pi_plus - pi_minus});
 }
 
-// receives pointer (necessary to get result back on main therad)
+// Receives pointer (necessary to get result back on main therad)
 fn thread_pi(pi: *f64, begin: u64, end: u64) !void {
     var n: u64 = begin;
     while (n < end) : (n += 4) {
         pi.* += 4 / @as(f64, @floatFromInt(n));
     }
 }
-
 ```
 
 
@@ -2624,9 +2709,12 @@ fn thread_pi(pi: *f64, begin: u64, end: u64) !void {
 ```rust
 const std = @import("std");
 
-// Init represents initial state of the process
+// std.process.Init represents initial state of the process
 pub fn main(init: std.process.Init) !void {
+    // Get standard output
     const io: std.Io = init.io;
+
+    // Get current working directory
     const cwd: std.Io.Dir = std.Io.Dir.cwd();
 
     cwd.createDir(io, "output", .default_dir) catch |e| switch (e) {
@@ -2634,19 +2722,22 @@ pub fn main(init: std.process.Init) !void {
         else => return e, // propagate other errors
     };
 
-    var output_dir: std.Io.Dir = try cwd.openDir(io, "output", .{});
+    const output_dir: std.Io.Dir = try cwd.openDir(io, "output", .{});
     defer output_dir.close(io);
 
     const file: std.Io.File = try output_dir.createFile(io, "zigling.txt", .{});
     defer file.close(io);
 
     var file_writer = file.writer(io, &.{});
+    // We made file_writer a var instead of a const so that
+    // the & operator here returns a *Io.Writer instead 
+    // of a *const Io.Writer
+    // (The write function expects a *Io.Writer)
     const writer = &file_writer.interface;
 
     const byte_written = try writer.write("It's zigling time!");
     std.debug.print("Successfully wrote {d} bytes.\n", .{byte_written});
 }
-
 ```
 
 ### 107_files2.zig
@@ -2656,7 +2747,6 @@ const std = @import("std");
 
 pub fn main(init: std.process.Init) !void {
     const io = init.io;
-
     const cwd = std.Io.Dir.cwd();
 
     var output_dir = try cwd.openDir(io, "output", .{});
@@ -2666,12 +2756,15 @@ pub fn main(init: std.process.Init) !void {
     defer file.close(io);
 
     var content = [_]u8{'A'} ** 64;
-    // this should print out : `AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`
+    // This should print out : 
+    // `AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`
     std.debug.print("{s}\n", .{content});
 
     var file_reader = file.reader(io, &.{});
     const reader = &file_reader.interface;
 
+    // Reads data from the file into the content array
+    // Returns the number of bytes read
     const bytes_read = try reader.readSliceShort(&content);
 
     std.debug.print("Successfully Read {d} bytes: {s}\n", .{
@@ -2696,9 +2789,10 @@ const PullRequestState = enum(u8) {
 };
 
 pub fn main() void {
-    // label on switch allows break and continue
-    // break = jump out of switch
-    // continue = jump to start of switch with a value
+    // Label on switch allows break and continue
+    // break = jump out of the switch
+    // continue = jump to start of the switch with a new value to switch on
+    // (effectively, a continue jumps to a different case)
     pr: switch (PullRequestState.Draft) {
         PullRequestState.Draft => continue :pr PullRequestState.InReview,
         PullRequestState.InReview => continue :pr PullRequestState.Approved,
@@ -2711,31 +2805,51 @@ pub fn main() void {
     }
     std.debug.print("The pull request has been merged.\n", .{});
 }
-
 ```
 
 
 ### 109_vectors.zig
 
 ```rust
+// @Vector returns a vector type
+// (The size of vector is not strictly limited, but in practice
+// you rarely want vectors of more than 4 elements.)
+
+// The @Vector() expression returns a vecotr type, but then the {} after 
+// makes thse literals.
+// So v1 is assigned a vector of 3 i32s, with the values 1, 10, 100
 const v1 = @Vector(3, i32){ 1, 10, 100 };
+// v2 is assigned a vector of 3 f32s, with the values 2.0, 3.0, 5.0
 const v2 = @Vector(3, f32){ 2.0, 3.0, 5.0 };
 
+// Component-wise addition and multiplication
 const v3 = v1 + v1; // {   2,  20,  200};
 const v4 = v2 * v2; // { 4.0, 9.0, 25.0};
 
+// Cast components of vector of i32 into a vector of f32
 const v5: @Vector(3, f32) = @floatFromInt(v3); // { 2.0,  20.0,  200.0}
+
+// Component-wise subtraction
 const v6 = v4 - v5; // { 2.0, -11.0, -175.0}
+
+// Component-wise absolute values
 const v7 = @abs(v6); // { 2.0,  11.0,  175.0}
 
+// @splat(2) returns a vector length is inferred from context and 
+// where every element is the argument
+// So v8 is assigned a vector of 4 u8s, with the values 2, 2, 2, 2
 const v8: @Vector(4, u8) = @splat(2); // { 2, 2, 2, 2}
-const v8_sum = @reduce(.Add, v8); // 8
-const v8_min = @reduce(.Min, v8); // 2
+
+// @reduce invokes the specified operation on each successive pair, 
+// producing a scalar result
+const v8_sum = @reduce(.Add, v8); // 8, the result of 2 + 2 + 2 + 2
+const v8_min = @reduce(.Min, v8); // 2, the result of min(min(min(2, 2), 2), 2)
 
 // Fixed-length arrays can be automatically assigned to vectors (and vice-versa).
 const single_digit_primes = [4]i8{ 2, 3, 5, 7 };
 const prime_vector: @Vector(4, i8) = single_digit_primes;
 
+// A calculation with arrays instead of vectors
 fn calcMaxPairwiseDiffOld(list1: [4]f32, list2: [4]f32) f32 {
     var max_diff: f32 = 0;
     for (list1, list2) |n1, n2| {
@@ -2747,7 +2861,10 @@ fn calcMaxPairwiseDiffOld(list1: [4]f32, list2: [4]f32) f32 {
     return max_diff;
 }
 
+// Define Vec4 as a vector type of 4 f32s
 const Vec4 = @Vector(4, f32);
+
+// Same as prior function, but uses vectors
 fn calcMaxPairwiseDiffNew(a: Vec4, b: Vec4) f32 {
     const abs_diff_vec = @abs(a - b);
     const max_diff = @reduce(.Max, abs_diff_vec);
@@ -2765,5 +2882,4 @@ pub fn main() void {
     print("Max difference (old fn): {d: >5.3}\n", .{mpd_old});
     print("Max difference (new fn): {d: >5.3}\n", .{mpd_new});
 }
-
 ```

@@ -4,6 +4,7 @@ This text is the supplementary notes for a series of videos that introduce data 
 
 - [part 1: Data Types](https://youtu.be/6aIpaUKE37I)
 - [part 2: Polymorphism](https://youtu.be/p5KF99mtph0)
+- [part 3: Code Examples]()
 
 > [!WARNING]
 > The videos and this text assume no prior knowledge of Odin itself, but they assume the audience already has some familiarity with C (or other languages with pointers, such as C++, Rust, Zig, or Go). Also be clear that this text is intended to be read after having first watched the videos.
