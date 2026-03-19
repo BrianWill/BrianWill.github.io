@@ -2772,7 +2772,7 @@ const v8: @Vector(4, u8) = @splat(2); // { 2, 2, 2, 2}
 const v8_sum = @reduce(.Add, v8); // 8, the result of 2 + 2 + 2 + 2
 const v8_min = @reduce(.Min, v8); // 2, the result of min(min(min(2, 2), 2), 2)
 
-// Fixed-length arrays can be automatically assigned to vectors (and vice-versa).
+// Fixed-length arrays can be automatically coerced to vectors (and vice-versa).
 const single_digit_primes = [4]i8{ 2, 3, 5, 7 };
 const prime_vector: @Vector(4, i8) = single_digit_primes;
 
