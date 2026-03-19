@@ -1,8 +1,6 @@
 # Zig Intro - Code Examples (Ziglings)
 
-![Under construction](../../construction.gif)
-
-This text is a supplement to a [video](https://ziglang.org/) that introduces the Zig programming language by walking through small code exercises from the [Ziglings project](https://codeberg.org/ziglings/exercises/#ziglings).
+This text is a supplement to a [video](https://youtu.be/nTkCMgYrDe0) that introduces the Zig programming language by walking through small code exercises from the [Ziglings project](https://codeberg.org/ziglings/exercises/#ziglings).
 
 This walkthrough assumes the audience has reasonable familiarity with C or other similar languages (*e.g.* C++, Rust, Odin, or Go). If you're new to this kind of programming, it may help to first check out my [Odin Introduction](odin_data_types.md).
 
@@ -12,12 +10,20 @@ The Ziglings exercises present broken code examples that need fixes to pass thei
 
 > [!WARNING] I strongly recommend working through the Ziglings exercises yourself at some point, say, one or two weeks after watching the video and reading this text. 
 
+### Other Zig intros
+
+- [Zig cheat sheet](https://www.luisllamas.es/en/cheatsheet-zig/)
+- [another Zig cheat sheet](https://github.com/grokkhub/zig-cheatsheet)
+- [Where X=Zig](https://learnxinyminutes.com/zig/)
+- [Zig guide](https://zig.guide/)
+- [Ziglang.org/learn](https://ziglang.org/learn/)
+
 ### 003_assignment.zig
 
 ```rust
-// A package namespace is a struct.
-// This assigns the "std" package struct to 'std' in the 
-// current package struct.
+// A module namespace is a struct.
+// This assigns the "std" module struct to 'std' in the 
+// current module struct.
 const std = @import("std");
 
 // Program entry point. Returns nothing.
@@ -32,8 +38,8 @@ pub fn main() void {
     // local constant 'negative_eleven' of type i8
     const negative_eleven: i8 = -11;
 
-    // The 'std' package includes 'debug' package,
-    // and 'debug' package includes 'print' function.
+    // The 'std' module includes 'debug' module,
+    // and 'debug' module includes 'print' function.
     // The .{} is an anonymous struct literal, here with three 
     // values assigned to indexes 0, 1, and 2 of the struct.
     // Print's second parameter has type 'anytype'. 
@@ -47,7 +53,7 @@ pub fn main() void {
 
 ```rust
 const std = @import("std");
-// create alias in local package for member of imported package
+// create alias in local module for member of imported module
 const assert = std.debug.assert;
 
 pub fn main() void {
@@ -318,9 +324,7 @@ fn makeJustRight(n: u32) MyNumberError!u32 {
     // If the fixTooBig call returns an error, catch clause is evaluated.
     // The catch clause assigns the error to 'err' and executes 
     // its block (the curly braces after |err|).
-    return fixTooBig(n) catch |err| {
-        return err;  // return from the containing function
-    };
+    return fixTooBig(n) catch |err| err;
 }
 
 fn fixTooBig(n: u32) MyNumberError!u32 {
@@ -383,28 +387,6 @@ fn detect(n: u32) MyNumberError!u32 {
 ```
 
 
-### 026_hello2.zig
-
-```rust
-const std = @import("std");
-
-pub fn main(init: std.process.Init) !void {
-    // std.debug.print writes to standard error, not standard output!
-
-    const io = init.io;
-    // Get the standard output file.
-    var stdout_file = std.Io.File.stdout();
-    // Create a writer for standard output
-    var stdout_writer = stdout_file.writer(io, &.{});
-    const stdout = &stdout_writer.interface;
-
-    // Writing to standard output can fail with an error,
-    // so we use 'try': 
-    try stdout.print("Hello world!\n", .{});
-}
-
-```
-
 ### 027_defer.zig
 
 ```rust
@@ -413,10 +395,10 @@ const std = @import("std");
 pub fn main() void {
     // defer the print call to end of the scope
     // (in this case end of the function)
-    defer std.debug.print("Two\n", .{});
+    defer std.debug.print("Banana\n", .{});
 
     // Should print before the above.
-    std.debug.print("One ", .{});
+    std.debug.print("Apple ", .{});
 }
 
 ```
@@ -768,23 +750,22 @@ pub fn main() void {
 const std = @import("std");
 
 pub fn main() void {
-    var a: u8 = 0;
+    var x: u8 = 0;
+    var y: u8 = 0;
 
-    // 'b' is a const, so cannot assign a different pointer value to 'b',
-    // and the type is 'pointer-to-const-u8'
-    // (&a returns a pointer-to-u8, which is 
-    // implicitly cast to pointer-to-const-u8)
-    const b: *const u8 = &a;
+    // type of 'p' is pointer-to-const-u8
+    var p: *const u8 = &x;
+    p = &y;
 
-    // cannot assign to deref of a pointer-to-const
-    // b.* = 7;
+    // p.* = 7;   // illegal: cannot assign to deref of a pointer-to-const
 
-    // Note that a const pointer does NOT guarantee that 
+    // This is valid: a const pointer does NOT guarantee that
     // the referenced data is immutable!
-    a = 12;
+    x = 8;
+    y = 9;
 
-    // OK to deref pointer-to-const to read value
-    std.debug.print("a: {}, b: {}\n", .{ a, b.* });
+    // reading the deref of a pointer-to-const is OK
+    std.debug.print("p: {}", .{ p.* });  // prints 9
 }
 ```
 
@@ -951,75 +932,9 @@ pub fn main() void {
 
     // Need "{!s}" format for the error union string.
     std.debug.print("{s} {!s} / ", .{ first_line1, first_line2 });
-
-    printSecondLine();
-}
-
-fn printSecondLine() void {
-    // Nullable-pointer-to-const-[18]u8
-    var second_line2: ?*const [18]u8 = null;
-    
-    // String literal of 18 characters coerced to *const [18]u8
-    second_line2 = "even death may die";
-
-    std.debug.print("And with strange aeons {s}.\n", .{second_line2.?});
 }
 ```
 
-
-### 051_values.zig
-
-```rust
-const std = @import("std");
-
-const Character = struct {
-    gold: u32 = 0,
-    health: u8 = 100,
-    experience: u32 = 0,
-};
-
-// global Character constant
-const the_narrator = Character{
-    .gold = 12,
-    .health = 99,
-    .experience = 9000,
-};
-
-// global Character variable
-var global_wizard = Character{};
-
-pub fn main() void {
-    var glorp = Character{
-        .gold = 30,
-    };
-    const reward_xp: u32 = 200;
-
-    // local alias of imported function
-    const print = std.debug.print;
-
-    var glorp_access1: Character = glorp;
-    glorp_access1.gold = 111;
-    print("1:{}!. ", .{glorp.gold == glorp_access1.gold});
-
-    var glorp_access2: *Character = &glorp;
-    glorp_access2.gold = 222;
-    print("2:{}!. ", .{glorp.gold == glorp_access2.gold});
-
-    const glorp_access3: *Character = &glorp;
-    glorp_access3.gold = 333;
-    print("3:{}!. ", .{glorp.gold == glorp_access3.gold});
-
-    print("XP before:{}, ", .{glorp.experience});
-
-    levelUp(&glorp, reward_xp);
-
-    print("after:{}.\n", .{glorp.experience});
-}
-
-fn levelUp(character: *Character, xp: u32) void {
-    character.experience += xp;
-}
-```
 
 ### 052_slices.zig
 
@@ -1058,7 +973,8 @@ fn printHand(hand: []u8) void {
 const std = @import("std");
 
 pub fn main() void {
-    const scrambled = "great base for all your justice are belong to us";
+    const scrambled: *const [48]u8 =
+        "great base for all your justice are belong to us";
 
     // these are slices of const u8
     // (slicing a string returns a slice of constants)
@@ -1103,8 +1019,8 @@ pub fn main() void {
     const char: u8 = manyptr[5]; // 'F'
 
     // Get slice from a many pointer
-    // Range is from 0 up to (but not including) ptr.len
-    slice = manyptr[0..ptr.len];
+    // Range is from 0 up to (but not including) s.len
+    slice = manyptr[0..s.len];
 
     std.debug.print("{s} {c}\n", .{ slice, char });
 }
@@ -1894,7 +1810,7 @@ pub fn main() void {
 ```rust
 const print = @import("std").debug.print;
 
-const llamas = [5]u32{ 5, 10, 15, 20, 25 };
+var llamas = [5]u32{ 5, 10, 15, 20, 25 };
 
 pub fn main() void {
     const my_llama = getLlama(4);
@@ -1980,7 +1896,7 @@ fn printSequence(my_seq: anytype) void {
         .pointer => {
             // if a pointer...
 
-            // The sentinel function from the meta package 
+            // The sentinel function from the meta module 
             // returns the sentinal value of the type (in this case 0)
             const my_sentinel = sentinel(@TypeOf(my_seq));
             print("Many-item pointer:", .{});
@@ -2021,11 +1937,13 @@ const WeirdContainer = struct {
 };
 
 pub fn main() void {
+    const str: *const [11:0]u8 = "Weird Data!";
+
     const foo = WeirdContainer{
         // A string literal is a "constant pointer to a
         // zero-terminated (null-terminated) fixed-size array of u8"
         // Here the literal is coerced to [*]const u8
-        .data = "Weird Data!",
+        .data = str,
         .length = 11,
     };
 
@@ -2261,7 +2179,7 @@ pub fn main() !void {
 ### 093_hello_c.zig
 
 ```rust
-const std = @import("std");
+const std: type = @import("std");
 
 // @cImport parses an expression of C code and imports 
 // the functions, types, variables, and compatible 
@@ -2420,7 +2338,7 @@ fn isPangram(str: []const u8) bool {
             //
             // Because bits is a u32, it can only be or'd with another
             // u32. By itself, the integer literal could be any integer type,
-            // but @truncate needs it to be a u32 to correclty infer its return type.
+            // but @truncate needs it to be a u32 to correctly infer its return type.
             bits |= @as(u32, 1) << @truncate(ascii.toLower(c) - 'a');
         }
     }
@@ -2632,8 +2550,15 @@ pub fn main() !void {
         // While the threads spawned above run, we can do
         // other business on main thread...
         // (though in this case we're just sleeping for total_time seconds)
+
+        // .init_single_threaded is shorthand for 
+        // std.Io.Threaded.init_single_threaded
+        // (namespace inferred from assignment target)
         var io_instance: std.Io.Threaded = .init_single_threaded;
         const io = io_instance.io();
+
+        // .awake is shorthand for std.Io.Clock.awake
+        // (namespace inferred from expected parameter type)
         try io.sleep(std.Io.Duration.fromSeconds(total_time), .awake);
 
         std.debug.print("main thread: finished.\n", .{});
@@ -2694,7 +2619,7 @@ pub fn main() !void {
     std.debug.print("PI ≈ {d:.8}\n", .{4 + pi_plus - pi_minus});
 }
 
-// Receives pointer (necessary to get result back on main therad)
+// Receives pointer (necessary to get result back on main thread)
 fn thread_pi(pi: *f64, begin: u64, end: u64) !void {
     var n: u64 = begin;
     while (n < end) : (n += 4) {
