@@ -4,11 +4,13 @@ This text is a supplement to a [video](https://youtu.be/nTkCMgYrDe0) that introd
 
 This walkthrough assumes the audience has reasonable familiarity with C or other similar languages (*e.g.* C++, Rust, Odin, or Go). If you're new to this kind of programming, it may help to first check out my [Odin Introduction](odin_data_types.md).
 
-> [!NOTE] Not all Ziglings exercises are included. Some exercises are skipped because they are redundant. Several others are skipped because they cover `async/await`, a feature that is not yet available in the main Zig compiler.
+> [!NOTE]
+> Not all Ziglings exercises are included. Some exercises are skipped because they are redundant. Several others are skipped because they cover `async/await`, a feature that is not yet available in the main Zig compiler.
 
 The Ziglings exercises present broken code examples that need fixes to pass their tests, but here we present just completed solutions. Rather than focus on the particular problems being solved and the logic of their solutions, the video commentary and the code comments in this text focus just on the Zig language features introduced by each exercise.
 
-> [!WARNING] I strongly recommend working through the Ziglings exercises yourself at some point, say, one or two weeks after watching the video and reading this text. 
+> [!WARNING]
+> I strongly recommend working through the Ziglings exercises yourself at some point, say, one or two weeks after watching the video and reading this text. 
 
 ### Other Zig intros
 
