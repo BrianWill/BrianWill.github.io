@@ -1,6 +1,6 @@
 # Zig Intro - Code Examples (Ziglings)
 
-This text is a supplement to a [video](https://youtu.be/nTkCMgYrDe0) that introduces the Zig programming language by walking through small code exercises from the [Ziglings project](https://codeberg.org/ziglings/exercises/#ziglings).
+This text is a supplement to a [video](https://youtu.be/oMhBO_6kiNE) that introduces the Zig programming language by walking through small code exercises from the [Ziglings project](https://codeberg.org/ziglings/exercises/#ziglings).
 
 This walkthrough assumes the audience has reasonable familiarity with C or other similar languages (*e.g.* C++, Rust, Odin, or Go). If you're new to this kind of programming, it may help to first check out my [Odin Introduction](odin_data_types.md).
 
