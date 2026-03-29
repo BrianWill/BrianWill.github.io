@@ -3,88 +3,6 @@
 # How to Vibe Code (Carefully)
 
 
-## AI Basics
-
-[add some recent history]
-
-neural network
-
-model
-
-gradient descent
-
-layers
-
-perceptrons
-
-tensor
-
-attention
-
-transformer
-
-LLM
-
-chatbot
-
-input vs output tokens
-    sub-word tokens
-
-output tokens fed back in as input (but they are normally just called "output tokens")
-
-pre-training / post-training (training in between)
-
-tokens
-
-documents
-
-base model
-
-
-VLM
-
-
-fine-tuning
-
-reinforcement learning
-    has a technical definition and a more popular loose definition
-
-
-context
-
-KV caching
-
-scenarios where the whole chat history has to be re-sent / "replayed", in whole or in part
-
-
-hallucination
-
-RAG
-
-tools
-
-agents
-
-sub-agents / agent orchestration / agentic loops
-    MoE (more of a training thing?)
-
-in-context learning
-
-skills
-
-compacting
-
-memory
-
-agents.md (claude.md / gemini.md / etc)
-
-mcp
-
-open models
-
-distillation
-
-diffusion (image models before moving to transformers)
 
 # prompting strategies
 
@@ -93,6 +11,7 @@ ask the bot to help you develop the right prompt
 if the bot can't do the task reliably, maybe the prompt needs clarification / more detail / more examples, or maybe just tell it explicitly to double check its work
     - or set up an agentic loop where a supervisor instructs one subagent to check the work of another
     - note of course that rechecking schemes mean more tokens, thus more time and cost
+
 
 ## Using Claude
 
@@ -122,7 +41,10 @@ effort
 /context
 /usage
 
-
+/add
+    - can get more effiicent token usage to manually add relevant files near start of chat
+    - for files you always use, add them to agents.md, or list them in another md file and first thing instruct your bot to /add those files
+/drop
 
 
 
@@ -162,6 +84,15 @@ standards of what constitutes good code doesn't seem really different
     - to extent AIs can write good code, they do so in the way skilled humans do
     - exception would be better at shoveling code around (see arg about html/css)
     - what AI lacks in true expertise, it often compensates with thorougness
+
+pragmatic engineer podcast with openclaw createor:
+    disses vibe coding and gastown approach
+    recommends codex
+
+some people are being reckless with these tools and polluting the world with noise
+    ...but you don't have to do that!
+    find a project task where you can start small and cautious
+        you'll begin to get a feel for what the bots can do reliably enough for your purposes
 
 less need for abstraction building:
     can shovel around masses of very boring, plain html / css / vanilla frontend js / Go backend routes and db functions / sql
