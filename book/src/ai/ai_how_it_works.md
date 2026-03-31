@@ -94,6 +94,8 @@ system prompts
 
 memory
 
+prompt engineering
+
 agents.md (claude.md / gemini.md / etc)
 
 mcp
