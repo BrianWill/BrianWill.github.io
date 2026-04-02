@@ -74,7 +74,15 @@ it's fun...but it's still work
 do I want to try using AI for everything now?
     form of AI psychosis: like Homer solving every minor inconvenience by shooting everything with a gun
 
+like a reverse of the twilight zone broken glasses
+    looking at list of ideated side projects, "there's time now! I can actually do all this"
+
 one Claude session, no worktrees: no multi-agent workflow, and don't prompt for sub-agents (though I think Claude thinking sometimes automatically delegates to subagents on its own accord)
+
+AIs are superhuman at breadth, diligence, and speed of synthesis and analysis
+    - what their synthesis and analysis lacks is taste, judgement, creativity, and insight
+
+"AI is good at writing code but dangerously bad at creating software" -- skooks (twitter) 3/30/26
 
 works really well for small tweaks / additions / removals when it has a clear context to immitate, e.g. established code structure, data model, UI patterns
 

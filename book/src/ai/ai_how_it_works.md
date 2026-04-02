@@ -77,7 +77,11 @@ hallucination
 
 RAG
 
+thinking
+
 tools
+
+ReAct Loop: Thought -> Action -> Observation
 
 agents
 
