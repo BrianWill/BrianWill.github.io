@@ -77,6 +77,8 @@ do I want to try using AI for everything now?
 like a reverse of the twilight zone broken glasses
     looking at list of ideated side projects, "there's time now! I can actually do all this"
 
+feels like when getting the internet or actually broadband for the first time: 'welp, boredom is the one thing I'm never going to experience again' (culred monkey paw: didn't anticipate the downside of that)
+
 one Claude session, no worktrees: no multi-agent workflow, and don't prompt for sub-agents (though I think Claude thinking sometimes automatically delegates to subagents on its own accord)
 
 AIs are superhuman at breadth, diligence, and speed of synthesis and analysis
@@ -85,6 +87,7 @@ AIs are superhuman at breadth, diligence, and speed of synthesis and analysis
 "AI is good at writing code but dangerously bad at creating software" -- skooks (twitter) 3/30/26
 
 works really well for small tweaks / additions / removals when it has a clear context to immitate, e.g. established code structure, data model, UI patterns
+
 
 managing the context; keeping agents.md up to date
 
@@ -121,3 +124,6 @@ each additional requirement distracts from others
 tricks to break down to steps:
     - ask to analyze for possible refactors one by one: possible dead code, possible move code to different files, possible add tests, possible remove tests, etc.
     - stub out UI of a feature first with dummy data before asking for working implementation
+
+reservations:
+    a world where everything is just tied together by AI instead of well-defined, relaible software with reliable APIs feels like repeating mistake of Unix tying everything together with text
