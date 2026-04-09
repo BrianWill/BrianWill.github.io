@@ -3,6 +3,46 @@
 # How to Vibe Code (Carefully)
 
 
+arguing with chatgpt about Odin
+https://blog.s-schoener.com/2026-01-14-claude-optimism/
+https://htmx.org/essays/yes-and/
+"AI is very good at writing code and dangerously mediocre at building software." -- skooks twitter 3/30/26
+    https://x.com/skooookum/status/2038775815190528419?s=20
+AI: alternatives to vibe coding
+    [shadow code](https://www.reddit.com/r/theprimeagen/comments/1r22vq1/i_hate_vibe_coding_so_i_built_a_better/)
+        sort of a return to co-pilot autocomplete...but more control?
+    rubber ducking
+        rubber duck that talks back
+    discovering libraries/frameworks/tools
+    ask questions / troubleshoot api/framework/tools
+    semantic search
+    answer questions about the code
+    explain error messages
+    diagnose configuration / installation issues
+    genrerate dummy data / example data
+    generating sql
+    generating regex
+    generating html/css
+    mocking UI
+        (wait what did I mean by "mocking"? prototyping?) 
+            maybe just in that it doenn't necessarily do real functionality, i.e. dummy buttons, dummy data
+    prototyping
+    debugging
+    find redundancies
+    refactoring
+        renames?
+        splitting files
+        splitting large functions
+        find functions to inline
+        find functions to nest
+    generating tests
+    AI reviews your PR / diff for bugs
+    managing context
+    check comments match the code
+    generate / update docs / readmes
+    generate PR descriptions
+
+
 
 # prompting strategies
 
@@ -69,7 +109,7 @@ responsible use of AI
     DO NOT POLLUTE
     maybe now an even higher obligation to vet your output, to increase the signal-to-noise ratio in the world
 
-it's fun...but it's still work
+
 
 do I want to try using AI for everything now?
     form of AI psychosis: like Homer solving every minor inconvenience by shooting everything with a gun
@@ -77,7 +117,12 @@ do I want to try using AI for everything now?
 like a reverse of the twilight zone broken glasses
     looking at list of ideated side projects, "there's time now! I can actually do all this"
 
+AI often crazy good at anticipating my next desire. The chatbots always end with a suggested follow up question, and very often it's exactly my next question, or sometimes a good question i didn't think to ask. So often I'm just responding "Tell me more" [Martin play My Dinner with Andre]
+
 feels like when getting the internet or actually broadband for the first time: 'welp, boredom is the one thing I'm never going to experience again' (culred monkey paw: didn't anticipate the downside of that)
+
+now more of a code critic than a code writer. Like the lazy forman that watches others do the work
+    that said, it's fun...but it still feels like work
 
 one Claude session, no worktrees: no multi-agent workflow, and don't prompt for sub-agents (though I think Claude thinking sometimes automatically delegates to subagents on its own accord)
 
