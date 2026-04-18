@@ -100,8 +100,9 @@ each additional requirement distracts from others
 
 ## AI assists other than just writing the code
 
-    [shadow code](https://www.reddit.com/r/theprimeagen/comments/1r22vq1/i_hate_vibe_coding_so_i_built_a_better/)
-        sort of a return to co-pilot autocomplete...but more control?
+    code stub completion
+        [shadow code](https://www.reddit.com/r/theprimeagen/comments/1r22vq1/i_hate_vibe_coding_so_i_built_a_better/)
+            sort of a return to co-pilot autocomplete...but more control?
     rubber ducking
         rubber duck that talks back
     discovering libraries/frameworks/tools
@@ -120,6 +121,10 @@ each additional requirement distracts from others
     prototyping
     debugging
     find redundancies
+    code review
+    explain its own generated code
+        (second pass after prompt to generate code)
+        with subagents, wouldn't neccessarily have to worry about context pollution doing this in a single prompt
     refactoring
         renames?
         splitting files
