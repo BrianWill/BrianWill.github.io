@@ -247,56 +247,10 @@ Only in the fourth week did I begin to use planning mode more extensively. I'm n
 
 Here are a few agentic coding tricks I picked up:
 
-- Instead of updating your AGENTS.md files, tell the bot to do it.
-- Tell the bot to stub out a new feature's UI before implementing the functionality, e.g. add buttons that don't yet do anything. This tends to be a natural way to break down a new feature into smaller increments.
+- Instead of updating your AGENTS.md file manually, tell the bot to do it.
+- Tell the bot to stub out a new feature's UI before implementing the functionality, *e.g.* add buttons that don't yet do anything. This is one natural way to break down a new feature into smaller increments (arguably no different from manual coding).
 - Have the bot generate dummy data and example data.
-- Ask the bot (or another AI) to refine your prompt and ask questions before it starts implementing.
-
-## Ways to use AI agents other than direct feature implementation and bug fixing
-
-Even if you're not ready to let an AI to directly generate new code or fix existing code, there are dozens of other ways AI agents might be helpful in your greenfield or brownfield projects:
-
-    discovering libraries/frameworks/tools
-    ask questions / troubleshoot api/framework/tools
-    semantic search
-    answer questions about the code
-    explain error messages
-    diagnose configuration / installation issues
-    generating sql
-    generating regex
-    generating html/css
-    mocking UI
-        (wait what did I mean by "mocking"? prototyping?) 
-            maybe just in that it doenn't necessarily do real functionality, i.e. dummy buttons, dummy data
-    find redundancies
-    code review
-    refactoring
-        renames?
-        splitting files
-        splitting large functions
-        find functions to inline
-        find functions to nest
-    generating tests
-    AI reviews your PR / diff for bugs
-    check comments match the code
-    generate / update docs / readmes
-    generate PR descriptions
-
-
-code stub completion
-        [shadow code](https://www.reddit.com/r/theprimeagen/comments/1r22vq1/i_hate_vibe_coding_so_i_built_a_better/)
-            sort of a return to co-pilot autocomplete...but more control?
-managing context
-
-explain its own generated code
-        (second pass after prompt to generate code)
-        with subagents, wouldn't neccessarily have to worry about context pollution doing this in a single prompt
-
-genrerate dummy data / example data
-
-debugging
-
-prototyping
+- Ask the bot (or another AI) to refine your prompt and tell it to ask you questions before starts implemention.
 
 ## Will AI change the nature of good code?
 
@@ -369,7 +323,6 @@ might break assumption that pretty UI signals good software
 
 
 
-## Getting started tips
 
 
 
@@ -507,3 +460,54 @@ In the settings, under drill defaults, add a number spinner (styled like the oth
 each additional requirement distracts from others
     "scream when you hear today's secret word"
     humans can do short-term temporary learning, but the AIs currently do not update their training when used
+
+
+
+## Ways to use AI agents other than direct feature implementation and bug fixing
+
+Even if you're not ready to let an AI to directly generate new code or fix existing code, there are dozens of other ways AI agents might be helpful in your greenfield or brownfield projects:
+
+    discovering libraries/frameworks/tools
+    ask questions / troubleshoot api/framework/tools
+    semantic search
+    answer questions about the code
+    explain error messages
+    diagnose configuration / installation issues
+    generating sql
+    generating regex
+    generating html/css
+    mocking UI
+        (wait what did I mean by "mocking"? prototyping?) 
+            maybe just in that it doenn't necessarily do real functionality, i.e. dummy buttons, dummy data
+    find redundancies
+    code review
+    refactoring
+        renames?
+        splitting files
+        splitting large functions
+        find functions to inline
+        find functions to nest
+    generating tests
+    AI reviews your PR / diff for bugs
+    check comments match the code
+    generate / update docs / readmes
+    generate PR descriptions
+
+
+code stub completion
+        [shadow code](https://www.reddit.com/r/theprimeagen/comments/1r22vq1/i_hate_vibe_coding_so_i_built_a_better/)
+            sort of a return to co-pilot autocomplete...but more control?
+managing context
+
+explain its own generated code
+        (second pass after prompt to generate code)
+        with subagents, wouldn't neccessarily have to worry about context pollution doing this in a single prompt
+
+genrerate dummy data / example data
+
+debugging
+
+prototyping
+
+
+## Getting started tips
