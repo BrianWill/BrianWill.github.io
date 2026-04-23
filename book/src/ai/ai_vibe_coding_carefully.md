@@ -216,18 +216,21 @@ The first few hours on this project already seem like a clear turning point in m
 I'm not yet ready to go to [Gas Town](https://steve-yegge.medium.com/welcome-to-gas-town-4f25ee16dd04), but I can see why some programmers have fallen into AI psychosis. Maybe now every minor inconvenience in my life can be swept away if I just think of the right prompt? I'm now Homer Simpson trying to solve every problem by shooting it with a gun.
 
 ![Homer gun](./homer_gun.gif)
+
 *The solution to all life's problems*
 
 I've also experienced the reverse of that Twilight Zone episode where the man in the library breaks his glasses: suddenly, looking at my long list of half-started side projects, it feels like I might actually have time to do them all.
 
 ![finally there's time](./lastman.jpg)
+
 *Time at last*
 
 (In fact, my vocab drill program only took four weeks because, of course, I immediately started five other side projects and have been rationing my precious token budget between them.)
 
-There's one major tech-related turning point in my life of similar magnitude: the day in 2001 that I got broadband internet. The quick revelation then was, 'Welp, whatever problems I'll have in my life, boredom will no longer be one of them.' (The downsides of this were not apparent at the time.)
+I can recall one other major tech-related turning point in my life of similar magnitude: the day in 2001 that I got broadband internet. The quick revelation on that day was, 'Welp, whatever problems I'll have in my life, boredom will no longer be one of them.' (The downsides of this were not apparent at the time.)
 
 ![the internet](./simpsons-paw.jpg)
+
 *The internet*
 
 In the last month, I’ve become more of a code critic than a code writer. From the outside, this might sound like a lazy foreman watching others do the heavy lifting, but as others have discovered, it can actually be surprisingly taxing, especially when sustaining a certain pace over days and weeks. It feels liberating, exciting, and even fun, but the accelerated pace that it enables makes it still feel like real work. So that alleviates my guilt a bit.
