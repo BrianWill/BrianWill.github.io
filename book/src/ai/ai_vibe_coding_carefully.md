@@ -1,4 +1,4 @@
-# How to Vibe Code (Carefully)
+# Vibe Coding (Carefully)
 
 Until recently, my AI usage has been very conservative, particularly for coding. Like a lot of people, I had only been using the chatbot web interfaces rather than agents or APIs, and my main AI use cases were for ad hoc question answering, web searching, (human) language translation, and problem troubleshooting, *e.g.* I'd often open a chat session with an error message.
 
