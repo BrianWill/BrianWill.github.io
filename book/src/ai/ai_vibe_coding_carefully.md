@@ -47,12 +47,12 @@ Anyway, some frustrations aside, I did find the chatbots useful for certain prog
 
 So in early March 2026 (way late to the party), I bought the $20 Claude subscription and started on a greenfield project, a vocabulary tracking and drilling program for learning Japanese. Within a week, I was already hooked enough to also get the $20 OpenAI and Gemini subscriptions.
 
-Over the next couple weeks, I alternated between Claude (CLI, almost all Sonnet 4.6 medium) and Codex (desktop app, almost all GPT-5.4 medium), switching to the other every time I ran out of my 5-hour-window allotted tokens.
+Over the next couple weeks, I alternated between Claude (CLI, almost all Sonnet 4.6 medium) and Codex (desktop app, almost all GPT-5.4 medium), switching to the other every time I ran out of my 5-hour window of allotted tokens.
 
 > [!NOTE]
-> Gemini has proven way less capable for coding (stemming from its poor use of tools, perhaps), but I occasionally find it useful for word wrangling and brainstorming tasks. I'm waiting to see if they can improve it reasonably soon, but I might just keep the subscription anyway for the 5TB of Google Drive storage.
+> Gemini has proven way less capable for coding (stemming from its poor use of tools, perhaps?), but I occasionally find it useful for word wrangling and brainstorming tasks. I'm waiting to see if they can improve it reasonably soon, but I might just keep the subscription anyway for the 5TB of Google Drive storage.
 
-My verdict? **Coding is not yet, as some have claimed, a "solved" problem, but I can now see a future where I no longer write first draft code by hand, and it's coming probably sooner than expected.**
+My verdict? **Coding is not yet, as some have claimed, a "solved" problem, but I can now see a future where I no longer write first draft code by hand, and that day is probably coming sooner than expected.**
 
 I consider this still an 'AI moderate' position, as you get overstated claims in both directions: opponents seem overly pessimistic of the current capabilities and the likely eventual future capabilities; proponents seem overly enthusiastic (to put it mildly).
 
@@ -62,7 +62,9 @@ In general, I found the AI followed my directions very faithfully more than ~97%
 
 ### Micro level quality
 
-On a micro level, the code has been consistently and impeccably boring and straightforward, with very sensible function decomposition, good naming sense, and a good eye for many (if not all) details. Over a month of prompting, I've barely seen any function logic bugs that didn't stem from under-specified prompting or requirements volatility (along the way, I've introduced many unplanned features and heavily redesigned other features, resulting in some serious code churn). 
+On a micro level, the code has been consistently and impeccably boring and straightforward, with very sensible function decomposition, good naming sense, and a good eye for many (if not all) details. Over a month of prompting, I've barely seen any function logic bugs that didn't stem from under-specified prompting or requirements volatility\*.
+
+*\* Along the way, I've introduced many unplanned features and heavily redesigned other features, resulting in some serious code churn.*
 
 By week two, I stopped skimming the generated function bodies of each prompt and just noted the function signatures. By week three, I was mostly watching which files got touched by each prompt and by how much. 'Was the expected amount of code added or removed in the right places? If so, then the code is probably good enough.' 
 
@@ -74,16 +76,11 @@ Aside from data design, it also seems critical for the human to exercise tight c
 
 Another maybe crucial practice is to do periodic cleanup. Fortunately, this can be largely offloaded to the AI as well. For example:
 
-```
-Prompt: Review the backend code for dead code and redundancies. If issues are found, suggest some code deletions and consolidations.
-```
+> Prompt: Review the backend code for dead code and redundancies. If issues are found, suggest some code deletions and consolidations.
 
-```
-Prompt: Review the backend test coverage for missing and outdated tests. Suggest additions and removals.
-```
+> Prompt: Review the backend test coverage for missing and outdated tests. Suggest additions and removals.
 
-```
-Prompt: File foo might be getting overly large. Suggest a way to reorganize the code into new or existing files.
+> Prompt: File foo might be getting overly large. Suggest a way to reorganize the code into new or existing files.
 ```
 
 > [!NOTE]
@@ -94,7 +91,7 @@ Prompt: File foo might be getting overly large. Suggest a way to reorganize the 
 My project was done mostly with Sonnet 4.6 (medium effort, 200k context) rather than the supposedly smarter Opus. I'm sure my prompting strategy and context management were far from optimal, however at almost every point, Sonnet exceeded my expectations and was more than adequate for this project. In fact, I really have only two major complaints:
 
 - **Speed**: Most small-task prompts take under a minute or two, but then the larger-task prompts often take five to ten minutes (medium effort seems to rarely work longer than ten minutes for any single prompt). If the models and agents could get the same results, say, twice as fast, my project would have likely been finished a good 20-30% sooner.
-- **Cost / token limits**: For the first week, I somehow managed to consistently stay narrowly within the Claude 5 hour token limits, but by week two, my prompting got a bit more aggressive, so I'd often have to put my pencil down after two or three hours. Subscribing to OpenAI mostly fixed this as then I could switch back and forth. Still, fretting about token limits adds a mental tax on top of the prompting, manual testing, feature planning, and code reviewing.
+- **Cost / token limits**: For the first week, I somehow managed to consistently stay narrowly within the Claude 5-hour token limits, but by week two, my prompting got a bit more aggressive, so I'd often have to put my pencil down after two or three hours. Subscribing to OpenAI mostly fixed this as then I could switch back and forth. Still, fretting about token limits adds a mental tax on top of my prompting, manual testing, feature planning, and code reviewing.
 
 Even if the models don't get any smarter, there's clearly a lot more we could get out of the existing ones with just better harnesses, better utilization strategies, and better ways to communicate with them. Offered the choice, I'm quite sure I'd take a faster and cheaper model with the Sonnet 4.6 level of intelligence over a smarter model.
 
