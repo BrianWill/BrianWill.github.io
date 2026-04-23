@@ -190,3 +190,132 @@ When a conversation gets extremely long (e.g., 300k tokens) and exceeds the 200k
 **In short:** If you want to sound like a compiler engineer or an LLM researcher, use **"The Context"** or **"The Contextual Prefix."** If you are talking about the file that stores your conversation on your hard drive, use **"The Transcript."**
 
 **Would you like me to show you how the `/compact` command actually "rewrites" the Transcript to create a shorter Context for the next turn?**
+
+
+
+
+
+
+
+## Using Claude
+
+claude CLI
+
+    uses API key (or subscription)
+    sends your prompts to Anthropic data center where the model processes your input
+    runs with associated project directory...but isn't reliably sandboxed to the dir
+        typically you ask the bot not to stray from the directory without your permission
+            ...but Claude cannot strictly enforce this, e.g. allowing claude to use find:* isn't sandboxed to just the project directory
+    receives output back from data center
+    output can include tool tags, which trigger your local Claude to invoke local actions, such as file reads / writes, and running shell commands
+    Cladue will ask for permission before acting locally on your machine
+    
+
+### session management
+
+sessions
+
+choosing models
+
+switching models
+
+effort
+
+/clear
+/context
+/usage
+
+/add
+    - can get more effiicent token usage to manually add relevant files near start of chat
+    - for files you always use, add them to agents.md, or list them in another md file and first thing instruct your bot to /add those files
+/drop
+
+
+
+
+
+prompting assistant:
+    chatbot helps you develop / refine your prompts to be passed on to the agent doing the actual coding
+    prompter bot and coder bot
+        prompter clobbers file @next_instruction.md with next prompt for codebot
+        codebot always just prompted with "Follow the prompt in @next_instrucation.md"
+        what about output from codebot? promptbot needs to see some of that to help write good prompts
+
+        promptbot could also have standing orders to recognize when context should be cleared and commits should be made, so it will suggest commits and commit messages and then can make commits for you
+
+other people characterize using AI to code as being a project manager
+
+
+
+
+
+
+
+one Claude session, no worktrees: no multi-agent workflow, and don't prompt for sub-agents (though I think Claude thinking sometimes automatically delegates to subagents on its own accord)
+
+AIs are superhuman at breadth, diligence, and speed of synthesis and analysis
+    - what their synthesis and analysis lacks is taste, judgement, creativity, and insight
+
+
+
+
+
+
+
+
+
+
+each additional requirement distracts from others
+    "scream when you hear today's secret word"
+    humans can do short-term temporary learning, but the AIs currently do not update their training when used
+
+
+
+## Ways to use AI agents other than direct feature implementation and bug fixing
+
+Even if you're not ready to let an AI to directly generate new code or fix existing code, there are dozens of other ways AI agents might be helpful in your greenfield or brownfield projects:
+
+    discovering libraries/frameworks/tools
+    ask questions / troubleshoot api/framework/tools
+    semantic search
+    answer questions about the code
+    explain error messages
+    diagnose configuration / installation issues
+    generating sql
+    generating regex
+    generating html/css
+    mocking UI
+        (wait what did I mean by "mocking"? prototyping?) 
+            maybe just in that it doenn't necessarily do real functionality, i.e. dummy buttons, dummy data
+    find redundancies
+    code review
+    refactoring
+        renames?
+        splitting files
+        splitting large functions
+        find functions to inline
+        find functions to nest
+    generating tests
+    AI reviews your PR / diff for bugs
+    check comments match the code
+    generate / update docs / readmes
+    generate PR descriptions
+
+
+code stub completion
+        [shadow code](https://www.reddit.com/r/theprimeagen/comments/1r22vq1/i_hate_vibe_coding_so_i_built_a_better/)
+            sort of a return to co-pilot autocomplete...but more control?
+managing context
+
+explain its own generated code
+        (second pass after prompt to generate code)
+        with subagents, wouldn't neccessarily have to worry about context pollution doing this in a single prompt
+
+genrerate dummy data / example data
+
+debugging
+
+prototyping
+
+
+## Getting started tips
