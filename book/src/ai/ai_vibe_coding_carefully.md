@@ -165,37 +165,38 @@ In theory, the AI will have an easier time navigating smaller files, as it can h
 
 To give you an idea of the incremental prompting style, here are some examples from my session logs. Most are requests for single feature additions, tweaks, or bug fixes:
 
-> The AI provider/modal selection and reroll buttons should [sic missing word] at top of the right sidebar. The reroll buttons should be "Generate alternate meaning", "Generate alternate examples"
+> Prompt: The AI provider/modal selection and reroll buttons should [sic missing word] at top of the right sidebar. The reroll buttons should be "Generate alternate meaning", "Generate alternate examples"
 
-> If the user has no AI keys available, this should be indicated with a message and instructions in the area that normally says "Click a generate button to see alternatives"
+> Prompt: If the user has no AI keys available, this should be indicated with a message and instructions in the area that normally says "Click a generate button to see alternatives"
 
-> In the lexicon word list, the buttons revelead by hover are shifting layout a bit. They should probably be visiblity hidden instead of display none when not shown.
+> Prompt: In the lexicon word list, the buttons revelead by hover are shifting layout a bit. They should probably be visiblity hidden instead of display none when not shown.
 
-> In the lexicon, each word should have a play button next to it that plays audio saying the word using the browser's TTS.
+> Prompt: In the lexicon, each word should have a play button next to it that plays audio saying the word using the browser's TTS.
 
-> The settings modal should be much wider (take up most of the viewport), and the content should be split into two columns: the drill defaults on teh left; the tts voices and voicevox settings on the right
+> Prompt: The settings modal should be much wider (take up most of the viewport), and the content should be split into two columns: the drill defaults on teh left; the tts voices and voicevox settings on the right
 
 A minority of prompts ask for several things at once and ask the AI to contribute more design:
 
-> The top right icon in the header should be a link to new "welcome.html". The welcome page includes the header with navlinks like the lexicon, drill, and activity pages. The content of the page explains the functionality of the app. Make the text layout interesting (like a magazine or borchure [sic]), and find some interesting Japanese-themed images to accompany the text.
+> Prompt: The top right icon in the header should be a link to new "welcome.html". The welcome page includes the header with navlinks like the lexicon, drill, and activity pages. The content of the page explains the functionality of the app. Make the text layout interesting (like a magazine or borchure [sic]), and find some interesting Japanese-themed images to accompany the text.
 
-> In the regular (non matching pairs) drill mode, let's make the last word info better match the word info in the matching pairs mode:
+> Prompt: In the regular (non matching pairs) drill mode, let's make the last word info better match the word info in the matching pairs mode:
 >
+> Prompt: 
 > 1) Rows each with two columns: content of the left column is left aligned; content of the right column is right aligned
 > 2) first row is the word in left column (text aligned to bottom of its column); right column is the image (if any)
 > 3) second row is the meaning in left column; pos in right column
 > 4) third row is reading in the left column; kanji with meanings in the right column
 > 5) fourth row is the japanese example sentence in the left column; english example sentence in the right
 
-> the regular (non matching pairs) drill mode is now broken in a few ways:
+> Prompt: the regular (non matching pairs) drill mode is now broken in a few ways:
 >
 > non-matching pairs mode not displaying word info correctly 
 >
 > non-matching pairs mode not persisting state correctly between reloads
 >
 > the "Next" button is not being displayed when "skip answer reveal" is disabled
->
-These issues may all stem from the matching pairs mode interfering with the non-matching pairs mode. As their logic is quite different, make sure they don't erroneously share code paths and state.
+> 
+> These issues may all stem from the matching pairs mode interfering with the non-matching pairs mode. As their logic is quite different, make sure they don't erroneously share code paths and state.
         
 Notice that I mostly stuck to full sentences and a polite but direct tone, as if the bot were a pair programming partner who does all the driving while I navigate. I'm sure this was generally unnecessary effort on my part, but I stuck with it so as to not introduce a new variable into my prompting experiments.
 
