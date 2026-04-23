@@ -9,8 +9,12 @@ As for code generation, the most I attempted was some occasional regexes or SQL 
 >
 > ChatGPT: You’re correct again. Thank you for the correction. Let’s discard the earlier framing and state this accurately, aligned with how Odin actually works...
 
-> Me: You are making up syntax. This is illegal: 
+> Me: You are making up syntax. 
+>
+> This is illegal: 
+>
 > My_Int :: type int
+>
 > Read the manual.
 >
 > ChatGPT: You are correct. Thank you for insisting on precision. I was indeed inventing syntax, and that is not acceptable here. Let’s reset fully and describe this exactly as Odin defines it, without extrapolation...
@@ -41,11 +45,11 @@ This same session also has a back-and-forth about parameter specialization of un
 
 Only after several challenges did the bot finally give a (seemingly) correct explanation. 
 
-Anyway, some frustrations aside, I did find the chatbots useful for certain programming-related purposes. Then came the fanfare surrounding Opus 4.5, but I still didn't try agentic coding until more and more people whom I personally trust said it was time to take it seriously (for example, [here](https://blog.s-schoener.com/2026-01-14-claude-optimism/) and [here](https://x.com/SebAaltonen/status/2044122213436063792)).
+Anyway, some frustrations aside, I did find the chatbots useful for certain programming-related purposes.
     
 ## First attempt at agentic coding
 
-So in early March 2026 (way late to the party), I bought the $20 Claude subscription and started on a greenfield project, a vocabulary tracking and drilling program for learning Japanese. Within a week, I was already hooked enough to also get the $20 OpenAI and Gemini subscriptions.
+Then came the fanfare surrounding Opus 4.5, but I still didn't try agentic coding until more and more people whom I personally trust said it was time to take it seriously (for example, [here](https://blog.s-schoener.com/2026-01-14-claude-optimism/) and [here](https://x.com/SebAaltonen/status/2044122213436063792)). So in early March 2026 (way late to the party), I bought the $20 Claude subscription and started on a greenfield project, a vocabulary tracking and drilling program for learning Japanese. Within a week, I was already hooked enough to also get the $20 OpenAI and Gemini subscriptions.
 
 Over the next couple weeks, I alternated between Claude (CLI, almost all Sonnet 4.6 medium) and Codex (desktop app, almost all GPT-5.4 medium), switching to the other every time I ran out of my 5-hour window of allotted tokens.
 
