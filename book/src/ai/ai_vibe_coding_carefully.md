@@ -66,7 +66,7 @@ ChatGPT: Exactly — that’s correct. The “forward compatibility” idea I su
 
 Only after several challenges did the bot finally give a (seemingly) correct explanation. 
 
-Anyway, some frustrations aside, I did fine the chatbots useful for certain programming-related purposes. Then came the fanfare surrounding Opus 4.5, but I still didn't try agentic coding. Only when more and more people whom I personally trusted said it was time to take it seriously (for example, [here](https://blog.s-schoener.com/2026-01-14-claude-optimism/) and [here](https://x.com/SebAaltonen/status/2044122213436063792)).
+Anyway, some frustrations aside, I did find the chatbots useful for certain programming-related purposes. Then came the fanfare surrounding Opus 4.5, but I still didn't try agentic coding. Only when more and more people whom I personally trusted said it was time to take it seriously (for example, [here](https://blog.s-schoener.com/2026-01-14-claude-optimism/) and [here](https://x.com/SebAaltonen/status/2044122213436063792)).
     
 ## First attempt at agentic coding
 

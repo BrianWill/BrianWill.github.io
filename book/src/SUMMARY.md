@@ -27,6 +27,12 @@
 
 ---
 
+# AI
+
+- [Vibe Coding (Carefully)](./ai/ai_vibe_coding_carefully.md)
+
+---
+
 # Game Programming
 
 - [Transforms](./games/transforms.md)
