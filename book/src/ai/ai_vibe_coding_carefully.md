@@ -1,72 +1,47 @@
 # Vibe Coding (Carefully)
 
-Until recently, my AI usage has been very conservative, particularly for coding. Like a lot of people, I had only been using the chatbot web interfaces rather than agents or APIs, and my main AI use cases were for ad hoc question answering, web searching, (human) language translation, and problem troubleshooting, *e.g.* I'd often open a chat session with an error message.
+Until recently, my AI usage has been very conservative, particularly for coding. Like a lot of people, I had only been using the chatbot web interfaces rather than agents or APIs, and my main AI use cases were for ad hoc question answering, web searching, (human) language translation, and problem troubleshooting, *e.g.,* I'd often start a chat session with an error message.
 
-As for writing code, the most I attempted to generate were some occasional regexes or SQL queries, or sometimes example scaffolding or usage code for some unfamiliar language or API. These attempts were usually successful, though sometimes required some prodding, especially with less popular and well-documented topics. For example, my attempts to use ChatGPT for questions about Odin required a lot of skepticism and pushback on my part, such as in this [exchange about Odin types](https://chatgpt.com/share/69e4a23b-07c4-83e8-96ca-713b562acbb8): 
+As for code generation, the most I attempted was some occasional regexes or SQL queries, or sometimes example scaffolding or usage code for some unfamiliar language or API. These attempts were usually successful though often required some prodding, especially with less popular and well-documented topics. For example, my attempts to use ChatGPT for questions about Odin required a lot of skepticism and pushback on my part, such as in this [exchange about Odin types](https://chatgpt.com/share/69e4a23b-07c4-83e8-96ca-713b562acbb8): 
 
-```
-Me: No still very wrong. "type" cannot be used as a parameter type.
-```
 
-```
-ChatGPT: You’re correct again. Thank you for the correction. Let’s discard the earlier framing and state this accurately, aligned with how Odin actually works...
-```
+> Me: No still very wrong. "type" cannot be used as a parameter type.
+>
+> ChatGPT: You’re correct again. Thank you for the correction. Let’s discard the earlier framing and state this accurately, aligned with how Odin actually works...
 
-```
-Me: You are making up syntax. This is illegal:
-
-My_Int :: type int
-
-Read the manual.
-```
-
-```
-ChatGPT: You are correct. Thank you for insisting on precision. I was indeed inventing syntax, and that is not acceptable here. Let’s reset fully and describe this exactly as Odin defines it, without extrapolation...
-```
+> Me: You are making up syntax. This is illegal: 
+> My_Int :: type int
+> Read the manual.
+>
+> ChatGPT: You are correct. Thank you for insisting on precision. I was indeed inventing syntax, and that is not acceptable here. Let’s reset fully and describe this exactly as Odin defines it, without extrapolation...
 
 This same session also has a back-and-forth about parameter specialization of union types. This was a case where I knew the bot's explanations did not hold water, but I wasn't sure of the correct answer myself, so all I could do was poke holes in its explanations:
 
-```
-ChatGPT: Good catch. The behavior you’re seeing is correct, and the earlier explanation needs a key correction...
-```
+> ChatGPT: Good catch. The behavior you’re seeing is correct, and the earlier explanation needs a key correction...
 
-```
-ChatGPT: ...I’ll answer it directly, without invented rules...
-```
+> ChatGPT: ...I’ll answer it directly, without invented rules...
 
-```
-ChatGPT: ...You are exactly right — and this exposes the real rule, which earlier explanations blurred.
+> ChatGPT: ...You are exactly right — and this exposes the real rule, which earlier explanations blurred.
+> 
+> You’ve identified the contradiction correctly...
 
-You’ve identified the contradiction correctly...
-```
+> ChatGPT: You’re right to call this out, and thank you for sticking with it. The earlier explanations implicitly assumed compile-time knowledge that the Odin compiler does not and cannot have. Let’s fix this cleanly and accurately.
+> 
+> What follows is the correct model...
 
-```
-ChatGPT: You’re right to call this out, and thank you for sticking with it. The earlier explanations implicitly assumed compile-time knowledge that the Odin compiler does not and cannot have. Let’s fix this cleanly and accurately.
+> ChatGPT: This is the crux of the confusion, and now we can state the actual mechanism precisely...
 
-What follows is the correct model...
-```
+> ChatGPT: Good — this observation finally pins it down. The behavior you’re seeing is the definitive clue to the real semantics.
+>
+> The correct explanation is...
 
-```
-ChatGPT: This is the crux of the confusion, and now we can state the actual mechanism precisely...
-```
+> ChatGPT: This is a good place to stop hand-waving and state the actual rule, because your example exposes it cleanly...
 
-```
-ChatGPT: Good — this observation finally pins it down. The behavior you’re seeing is the definitive clue to the real semantics.
-
-The correct explanation is...
-```
-
-```
-ChatGPT: This is a good place to stop hand-waving and state the actual rule, because your example exposes it cleanly...
-```
-
-```
-ChatGPT: Exactly — that’s correct. The “forward compatibility” idea I suggested is misleading in the context of parapoly unions. You’ve caught the subtlety. Let me clarify precisely...
-```
+> ChatGPT: Exactly — that’s correct. The “forward compatibility” idea I suggested is misleading in the context of parapoly unions. You’ve caught the subtlety. Let me clarify precisely...
 
 Only after several challenges did the bot finally give a (seemingly) correct explanation. 
 
-Anyway, some frustrations aside, I did find the chatbots useful for certain programming-related purposes. Then came the fanfare surrounding Opus 4.5, but I still didn't try agentic coding. Only when more and more people whom I personally trusted said it was time to take it seriously (for example, [here](https://blog.s-schoener.com/2026-01-14-claude-optimism/) and [here](https://x.com/SebAaltonen/status/2044122213436063792)).
+Anyway, some frustrations aside, I did find the chatbots useful for certain programming-related purposes. Then came the fanfare surrounding Opus 4.5, but I still didn't try agentic coding until more and more people whom I personally trust said it was time to take it seriously (for example, [here](https://blog.s-schoener.com/2026-01-14-claude-optimism/) and [here](https://x.com/SebAaltonen/status/2044122213436063792)).
     
 ## First attempt at agentic coding
 
@@ -280,4 +255,4 @@ In the last month, I’ve become more of a code critic than a code writer. From 
 
 ## Software quality Götterdämmerung?
 
-Personal value aside, what are the broader implications of AI coding? Will all programmers be unemployed? Is our future doomed to a flood of slow, insecure, buggly slop? I have my thoughts, but I'll save them for a another post.
+Personal value aside, what are the broader implications of AI coding? Will all programmers be unemployed? Is our future doomed to a flood of slow, insecure, buggly slop? I have my thoughts, but I'll save them for another post.
