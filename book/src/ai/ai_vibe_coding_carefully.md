@@ -115,31 +115,31 @@ This is actually my 4th (5th?) iteration of a Japanese vocabulary program that I
     - the chatbot prompts can incoporate your tracked vocabulary *(not yet implemented)*
 - text-to-speech reading of words and stories using VoiceVox (or the browser's built-in TTS as fallback)
 
-All of this is currently working with seemingly no major bugs. Still, only by actually using the thing for a few months will I be able to finalize the design and work out the kinks before calling it done.
+All of this is currently working with seemingly no major bugs, though only by actually using the thing for a few months will I be able to finalize the design and work out the kinks before I can call it done.
 
 > [!WARNING]
 > The AI tutor chatbot in particular is half-baked design-wise. I need to spend some time refining the prompts and still need to implement integration of the user's tracked vocabulary.
 
 As for the code, the program is implemented as a single-user, locally-served web app: 
 
-    - Go backend using Chi routing
-    - SQLite DB
-    - kagome (Go library for Japanese morphological analysis)
-    - vanilla JS frontend
-    - ES6 modules
+- Go backend using Chi routing
+- SQLite DB
+- kagome (Go library for Japanese morphological analysis)
+- vanilla JS frontend
+- ES6 modules
 
 > [!NOTE]
-> I originally used [Wails v3](https://wails.io/) (a web view library for Go applications) so the app could run "standalone" version, but its zoom scaling behaviour was borking the layout, so I reverted the app to simply run in just the user's browser.
+> I originally used [Wails v3](https://wails.io/) (a web view library for Go applications) so the app could run in its own window, but the Wails v3 zoom scaling behaviour was borking the layout, so I reverted the app to simply run in just the user's browser.
 
 It should be acknowledged that this kind of app is very low stakes in terms of performance and security; nor does the app do anything sophisticated algorithmically, as it's mostly CRUD, which lends itself to boilerplate, orthogonal code. Hence, this is not the most demanding test case for AI's reasoning capabilities.
 
-On the other hand, most every feature in a web app naturally gets split into several pieces, *i.e.*:
+On the other hand, most every feature in a web app naturally gets split into several pieces:
 
-    - backend route handling
-    - backend database queries
-    - frontend logic and state management in JavaScript
-    - frontend HTML
-    - frontend CSS
+- backend route handling
+- backend database queries
+- frontend logic and state management in JavaScript
+- frontend HTML
+- frontend CSS
 
 With few exceptions, both Claude and Codex were remarkably good at accounting for and coordinating all of these pieces for every requested change, big or small.
 
@@ -150,8 +150,8 @@ I was also surprised how well the AI agents could produce decent UI designs desp
 
 At the three week mark, I wasn't quite done with every feature, but I decided to manually audit the non-test code by reading every line of every function:
 
-- *Backend*: The backend Go route handlers and database queries were, as I said up front, impeccably boring (complementary) and straightforward. In the ~8k SLOC, I found barely a single thing worth manually tweaking.
-- *Frontend*: On an individual function level, there was also very little to complain about in the ~8k SLOC of JavaScript. At a macro level, however, the *ad hoc* state management patterns on some pages were a little concerning, but I think this is just the nature of vanilla frontend JavaScript.
+- *Backend*: The backend Go route handlers and database queries were, as I said earlier, impeccably boring (complementary) and straightforward. In the ~8k SLOC, I found barely a single thing worth manually tweaking.
+- *Frontend*: On an individual function level, there was also very little to complain about in the ~8k SLOC of JavaScript. At a macro level, however, the *ad hoc* state management patterns on some pages were a little concerning, but in my opinion, this is just the nature of vanilla frontend JavaScript. (Addressing this would require using a state-management abstraction, like React.)
 
 On both fronts, I suspect my habit of running cleanup prompts every few days paid off by excising dead code and bad structure. Without this periodic cleanup, would the AI have gotten more and more confused about proper style and intent as the codebase collected junk? I'm not sure, as it's not clear to me how much the AIs cue off the existing code.
 
@@ -166,54 +166,37 @@ In theory, the AI will have an easier time navigating smaller files, as it can h
 
 To give you an idea of the incremental prompting style, here are some examples from my session logs. Most are requests for single feature additions, tweaks, or bug fixes:
 
-```
-The AI provider/modal selection and reroll buttons should [sic missing word] at top of the right sidebar. The reroll buttons should be "Generate alternate meaning", "Generate alternate examples"
-```
+> The AI provider/modal selection and reroll buttons should [sic missing word] at top of the right sidebar. The reroll buttons should be "Generate alternate meaning", "Generate alternate examples"
 
-```
-If the user has no AI keys available, this should be indicated with a message and instructions in the area that normally says "Click a generate button to see alternatives"
-```
+> If the user has no AI keys available, this should be indicated with a message and instructions in the area that normally says "Click a generate button to see alternatives"
 
-```
-In the lexicon word list, the buttons revelead by hover are shifting layout a bit. They should probably be visiblity hidden instead of display none when not shown.
-```
+> In the lexicon word list, the buttons revelead by hover are shifting layout a bit. They should probably be visiblity hidden instead of display none when not shown.
 
-```
-In the lexicon, each word should have a play button next to it that plays audio saying the word using the browser's TTS.
-```
+> In the lexicon, each word should have a play button next to it that plays audio saying the word using the browser's TTS.
 
-```
-The settings modal should be much wider (take up most of the viewport), and the content should be split into two columns: the drill defaults on teh left; the tts voices and voicevox settings on the right
-```
+> The settings modal should be much wider (take up most of the viewport), and the content should be split into two columns: the drill defaults on teh left; the tts voices and voicevox settings on the right
 
 A minority of prompts ask for several things at once and ask the AI to contribute more design:
 
+> The top right icon in the header should be a link to new "welcome.html". The welcome page includes the header with navlinks like the lexicon, drill, and activity pages. The content of the page explains the functionality of the app. Make the text layout interesting (like a magazine or borchure [sic]), and find some interesting Japanese-themed images to accompany the text.
 
-```
-The top right icon in the header should be a link to new "welcome.html". The welcome page includes the header with navlinks like the lexicon, drill, and activity pages. The content of the page explains the functionality of the app. Make the text layout interesting (like a magazine or borchure [sic]), and find some interesting Japanese-themed images to accompany the text.
-```
+> In the regular (non matching pairs) drill mode, let's make the last word info better match the word info in the matching pairs mode:
+>
+> 1) Rows each with two columns: content of the left column is left aligned; content of the right column is right aligned
+> 2) first row is the word in left column (text aligned to bottom of its column); right column is the image (if any)
+> 3) second row is the meaning in left column; pos in right column
+> 4) third row is reading in the left column; kanji with meanings in the right column
+> 5) fourth row is the japanese example sentence in the left column; english example sentence in the right
 
-```
-In the regular (non matching pairs) drill mode, let's make the last word info better match the word info in the matching pairs mode:
-
-1) Rows each with two columns: content of the left column is left aligned; content of the right column is right aligned
-2) first row is the word in left column (text aligned to bottom of its column); right column is the image (if any)
-3) second row is the meaning in left column; pos in right column
-4) third row is reading in the left column; kanji with meanings in the right column
-5) fourth row is the japanese example sentence in the left column; english example sentence in the right
-```
-
-```
-the regular (non matching pairs) drill mode is now broken in a few ways:
-
-non-matching pairs mode not displaying word info correctly 
-
-non-matching pairs mode not persisting state correctly between reloads
-
-the "Next" button is not being displayed when "skip answer reveal" is disabled
-
+> the regular (non matching pairs) drill mode is now broken in a few ways:
+>
+> non-matching pairs mode not displaying word info correctly 
+>
+> non-matching pairs mode not persisting state correctly between reloads
+>
+> the "Next" button is not being displayed when "skip answer reveal" is disabled
+>
 These issues may all stem from the matching pairs mode interfering with the non-matching pairs mode. As their logic is quite different, make sure they don't erroneously share code paths and state.
-```
         
 Notice that I mostly stuck to full sentences and a polite but direct tone, as if the bot were a pair programming partner who does all the driving while I navigate. I'm sure this was generally unnecessary effort on my part, but I stuck with it so as to not introduce a new variable into my prompting experiments.
 
@@ -240,8 +223,7 @@ I've also experienced the reverse of that Twilight Zone episode where the man in
 ![finally there's time](./lastman.jpg)
 *Time at last*
 
-> [!NOTE]
-> In fact, my vocab drill program only took four weeks because, of course, I immediately started five other side projects and have been rationing my precious token budget between them.
+(In fact, my vocab drill program only took four weeks because, of course, I immediately started five other side projects and have been rationing my precious token budget between them.)
 
 There's one major tech-related turning point in my life of similar magnitude: the day in 2001 that I got broadband internet. The quick revelation then was, 'Welp, whatever problems I'll have in my life, boredom will no longer be one of them.' (The downsides of this were not apparent at the time.)
 
