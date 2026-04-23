@@ -180,7 +180,7 @@ A minority of prompts ask for several things at once and ask the AI to contribut
 > Prompt: The top right icon in the header should be a link to new "welcome.html". The welcome page includes the header with navlinks like the lexicon, drill, and activity pages. The content of the page explains the functionality of the app. Make the text layout interesting (like a magazine or borchure [sic]), and find some interesting Japanese-themed images to accompany the text.
 
 > Prompt: In the regular (non matching pairs) drill mode, let's make the last word info better match the word info in the matching pairs mode:
->
+
 > Prompt: 
 > 1) Rows each with two columns: content of the left column is left aligned; content of the right column is right aligned
 > 2) first row is the word in left column (text aligned to bottom of its column); right column is the image (if any)
@@ -225,7 +225,7 @@ I've also experienced the reverse of that Twilight Zone episode where the man in
 
 *Time at last*
 
-(In fact, my vocab drill program only took four weeks because, of course, I immediately started five other side projects and have been rationing my precious token budget between them.)
+(In fact, my vocab drill program only took as long as it did because, of course, I immediately started five other side projects and have been rationing my precious token budget between them.)
 
 I can recall one other major tech-related turning point in my life of similar magnitude: the day in 2001 that I got broadband internet. The quick revelation on that day was, 'Welp, whatever problems I'll have in my life, boredom will no longer be one of them.' (The downsides of this were not apparent at the time.)
 
