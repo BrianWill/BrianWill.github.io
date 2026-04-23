@@ -99,7 +99,7 @@ All this said, my glowing experiences so far have been in small, highly disposab
 
 ## The project
 
-To give this conrete context, let me describe the project and my process in some detail.
+To give this conrete context, let me describe [the project](https://github.com/BrianWill/jpvocab) and my process in some detail.
 
 This is actually my 4th (5th?) iteration of a Japanese vocabulary program that I've made over the last few years, as my theory of optimal drilling practices has shifted a number of times. Features include:
 
