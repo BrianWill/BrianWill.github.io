@@ -237,4 +237,4 @@ In the last month, I’ve become more of a code critic than a code writer. From 
 
 ## Software quality Götterdämmerung?
 
-Personal value aside, what are the broader implications of AI coding? Will all programmers be unemployed? Is our future doomed to a flood of slow, insecure, buggly slop? I have my thoughts, but I'll save them for another post.
+Personal value aside, what are the broader implications of AI coding? Will all programmers be unemployed? Is our future doomed to a flood of slow, insecure, buggly slop? I have many thoughts, but I'll save them for another post.
