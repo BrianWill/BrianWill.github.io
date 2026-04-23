@@ -81,7 +81,6 @@ Another maybe crucial practice is to do periodic cleanup. Fortunately, this can 
 > Prompt: Review the backend test coverage for missing and outdated tests. Suggest additions and removals.
 
 > Prompt: File foo might be getting overly large. Suggest a way to reorganize the code into new or existing files.
-```
 
 > [!NOTE]
 > I found it helps to make my own self-doubt clear in the prompts: the AI is very eager to please, so if it thinks you want to do something stupid, it will often proceed without objection. Framing your prompts as possibilities seems to make the AI more opinionated and potentially skeptical of your ideas.
