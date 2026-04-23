@@ -127,7 +127,9 @@ All this said, my glowing experiences so far have been in small, highly disposab
 
 ## The project
 
-This is actually my 4th (5th?) iteration of a Japanese vocabulary program that I've made over the last few years, as my theory of optimal drilling practices has shifted a number times. Features include:
+To give this conrete context, let me describe the project and my process in some detail.
+
+This is actually my 4th (5th?) iteration of a Japanese vocabulary program that I've made over the last few years, as my theory of optimal drilling practices has shifted a number of times. Features include:
 
 - store and track vocabulary words, including drill stats
   - automatically associate words and kanji with readings and definitions (using an included Japanese-English dictionary)
@@ -261,7 +263,7 @@ I'm not yet ready to go to [Gas Town](https://steve-yegge.medium.com/welcome-to-
 ![Homer gun](./homer_gun.gif)
 *The solution to all life's problems*
 
-It's also the reverse of that Twilight Zone episode where the man in the library breaks his glasses: suddenly, looking at my long list of half-started side projects, I realize I might actually have time to do them all.
+I've also experienced the reverse of that Twilight Zone episode where the man in the library breaks his glasses: suddenly, looking at my long list of half-started side projects, it feels like I might actually have time to do them all.
 
 ![finally there's time](./lastman.jpg)
 *Time at last*
@@ -269,7 +271,7 @@ It's also the reverse of that Twilight Zone episode where the man in the library
 > [!NOTE]
 > In fact, my vocab drill program only took four weeks because, of course, I immediately started five other side projects and have been rationing my precious token budget between them.
 
-I can think of one major tech turning point in my life of similar magnitude: the day in 2001 that I got broadband internet. The quick revelation then was, 'Welp, whatever problems I'll have in my life, boredom will no longer be one of them.' (The downsides of this were not apparent at the time.)
+There's one major tech-related turning point in my life of similar magnitude: the day in 2001 that I got broadband internet. The quick revelation then was, 'Welp, whatever problems I'll have in my life, boredom will no longer be one of them.' (The downsides of this were not apparent at the time.)
 
 ![the internet](./simpsons-paw.jpg)
 *The internet*
