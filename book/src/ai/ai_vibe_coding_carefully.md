@@ -1,6 +1,6 @@
 # Vibe Coding (Carefully)
 
-Until recently, my AI usage has been very conservative, particularly for coding. Like a lot of people, I had only been using the chatbot web interfaces rather than agents or APIs, and my main AI use cases were for ad hoc question answering, web searching, (human) language translation, and problem troubleshooting, *e.g.,* I'd often start a chat session with an error message.
+Until recently, my AI usage has been very conservative, particularly for coding. Like a lot of people, I had only been using the chatbot web interfaces rather than agents or APIs, and my main AI use cases were for *ad hoc* question answering, web searching, (human) language translation, and problem troubleshooting, *e.g.,* 'explain this error message'.
 
 As for code generation, the most I attempted was some occasional regexes or SQL queries, or sometimes example scaffolding or usage code for some unfamiliar language or API. These attempts were usually successful though often required some prodding, especially with less popular and well-documented topics. For example, my attempts to use ChatGPT for questions about Odin required a lot of skepticism and pushback on my part, such as in this [exchange about Odin types](https://chatgpt.com/share/69e4a23b-07c4-83e8-96ca-713b562acbb8): 
 
