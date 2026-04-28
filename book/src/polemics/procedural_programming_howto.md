@@ -1,82 +1,50 @@
 # Procedural Programming HOWTO
 
-want to give quick positive description of the procedural approach, but need to briefly recap how it differs from other ways of thinking
+It's been about ten years since I published [my critiques of Object-Oriented Programming](./oop_is_bad.md), and I've since resisted revisting the topic until I have some new thoughts or or a useful reformulation of the argument. Well now I'm ready to beat the dead horse again, though only briefly and hopefully for the last time.
 
-# OOP critique recap
+What follows will be:
 
-problems:
+1. A quick restatement of the problems with OOP.
+2. A high-level explanation of what I consider good ways to structure code and data, which for lack of a better term, we can call "procedural programming".
 
-Over-enthusiasm for fine-grained modularity:
+## OOP performance issues
 
-Trade complexity within modules for complexity between modules:
-    low tolerance for intra-module complexity
-    high tolerance for inter-module complexity
-
-Conflate data types and modules:
-    all data types are modules
-    all modules are data types
-
-====
- *Lack of appreciation for flat, sequential code and data*
-
- easiest mental model, easiest to reason about and debug
- ====
+One angle of critique I didn't actually cover in my original videos is the performance angle. Others have covered this angle thoroughly, but I've also written a brief summary of the problems in an appendix of the [Unity DOTS E-book](https://unity.com/resources/introduction-to-dots-ebook). Quoting from myself:
 
 
-Performance costs of OOP
+> ...OOP tends to incur a number of performance costs:
+> 
+> - **Scattered data layout**: OOP code is often split into many small objects, and the data often ends up scattered throughout memory (which leads to cache inefficiencies)
+> - **Bad allocation patterns**: The complex code paths and tangled data relationships that OOP encourages often make it difficult to reason about object lifetimes, so OOP code tends to rely upon frequent, small allocations and garbage collection rather than more efficient alternatives
+> - **Excessive abstraction**: Object-oriented design often encourages layers of delegation, where the higher levels defer the real work to lower levels, resulting in many objects and methods that do little actual work
+> - **Complex call chains**: Thanks to the many layers of abstraction and a preference for small functions, call chains get very complex
+> - **Virtual calls**: Not only do virtual dispatch tables incur overhead over regular function calls, virtual calls cannot normally be inlined (though some JIT compilers may do so at runtime)
+> - **One-at-a-time processing**: Because the code which directly manipulates an object is part of the object itself, there’s a natural tendency in OOP to process objects one-by-one rather than in large batches
 
-// only mention these as they come up in contrast to procedural, e.g. mention scattered data layout when describing good data design
+---
 
+## OOP structural issues
 
-On the downside, OOP tends to incur a number of performance costs:
-— Scattered data layout: OOP code is often split into many small objects, and the data
-often ends up scattered throughout memory (which leads to cache inefficiencies, as
-discussed in prior sections)
-— Excessive abstraction: Object-oriented design often encourages layers of delegation,
-where the higher levels defer the real work to lower levels, resulting in many objects and
-methods that do little actual work
-— Complex call chains: Thanks to the many layers of abstraction and a preference for
-small functions, call chains get very complex
-— Virtual calls: Not only do virtual dispatch tables incur overhead over regular function
-calls, virtual calls cannot normally be inlined (though some JIT compilers may do so at
-runtime)
-— Bad allocation patterns: The complex code paths and tangled data relationships that OOP encourages often make it
-difficult to reason about object lifetimes, so OOP code tends to rely upon frequent, small
-allocations and garbage collection rather than more efficient alternatives
-— One-at-a-time processing: Because the code which directly manipulates an object is
-part of the object itself, there’s a natural tendency in OOP to process objects one-by-one
-rather than in large batches
+The same appendix also discusses structural issues with OOP, but I'll try to reduce the argument here down to two key problems:
 
+### 1) Overenthusiasm for fine-grained modularity
 
+Dividing large systems into encapsulated modules is a perfectly good idea and perhaps even essential at a certain scale. OOP takes the idea way too far: 'If modules are good, then maybe everything should be a module, and maybe more modules are always better?'
 
-1 Entangling your data and code makes both of them messier and more complicated
+The underlying premise is that, the smaller a module, the easier a module can be made correct. In itself, this is totally true. The mistake is forgetting that the correctness of the whole system resides in how the modules interrelate, not just the correctness of the individual modules. By forgetting this, OOP often ends up replacing concentrated complexity with scattered complexity&mdash;which is generally more difficult to reason about&mdash;and thus increasing overall complexity.
 
-2 Replacing concentrated complexity with scattered complexity increases the overall complexity
+> [!NOTE]
+> A related structural problem of OOP is 'conflation of data types with modules', the insistence that every data type be its own module and that all modules are data types. This conflation often leads to unnecessary fracturing of code and data across odd boundaries, *e.g.* relocating data from one object to another because it doesn't fit the supposed 'single responsibility' of the object.
+>
+> Arguably, though, this mistake is all just downstream of the OOP mania for fine-grained modularity. In origin, the thought process may have been: 1) some data types *do* make for naturally, self-contained modules, and 2) a program's data types are typically numerous and small enough to seem like plausible boundary lines for fine-grained modules. Hence, this conflation seemed like a good idea.
 
-3 Objects make it difficult to track which code accesses which data
+### 2) Aversion to sequential code and flat data
 
+The second major problem with object-oriented design is its strong tendency to result in ping-pong call graphs and tangles of cross-referenced data. These follow naturally from the excessive modularity: because the objects are small and self-contained, they can do little on their own and so tend to collect more-and-more direct and indirect references to other objects, and then to get anything done, the methods of an object must invoke the methods of other objects which must invoke the methods of other objects which must invoke the methods of other objects...
 
-# mindset
+As I'll argue in the rest of this article, over-complicating the shape of your code and data in this way&mdash;straying from simple, sequential code and simple, flat data&mdash;makes your program much harder to understand and often much more difficult to optimize.
 
-
-procedural mindset…(but not really about procedural vs. OOP, per se)
-pessimistic about fine-grained modularization
-pessimistic about code reuse
-pessimistic about creating abstractions
-pessimistic about using abstractions
-
-
-tolerant of rewriting code
-    exploratory problem solving
-    not worried about future, just solve for the problem as currently defined (even if consciously truncated)
-    don’t speculate about future needs
-    if the requirements change, change the data/code
-    good writing is rewriting
-
-APIs != normal code
-
-
-# data transformation
+## Data transformation
 
 translating problems that don’t seem like data transformation problems into data transformation
 
@@ -100,15 +68,15 @@ data pipeline spaghetti
 
 ## Good function design
 
-no data mutation of arguments
-no read of globals
-no write of globals
-no i/o
-no alloc
-no sync
-no async coloring
-no exceptions
-    no returned errors?
+- no mutation of argument data
+- no read of globals
+- no write of globals
+- no i/o
+- no alloc
+- no sync
+- no coloring (async or otherwise)
+- no exceptions
+- no returned errors? (ideally keep failure paths out of core logic...but not always possible; keeping IO out of core logic paths already removes a big chunk of likely failure paths from most code)
 
 shallow call stacks
 
@@ -122,6 +90,7 @@ minimize scope of data access
         2. what parts of code touch a certain piece of data?
 
 
+loggers and allocators are a special exemption for rule against globals because you generally don't have to worry about their state (even though they are stateful): your code is not going to put a logger into a bad state
 
 ## Good data design
 
@@ -143,7 +112,7 @@ reference into structures by index/keys rather than address
 avoid redundancies
     consider the minimal, most compact encoding of the information
 
-## sequences > hierarchies > graphs
+## Sequences > hierarchies > graphs
 
 common theme about both code design and data design
 
@@ -167,14 +136,32 @@ sometimes you do need hierarchies and graphs
 
 # DISCARD
 
-pessimistic about dependencies
-pessimistic about compilers / toolchains
+
+
+## Procedural mindset
+
+- **Pessimistic about fine-grained modularization**:
+- **Pessimistic about code reuse and abstractions**: solve just your specific, immediate problem rather than speculate about your future problems
+- **Pessimistic about dependencies**:
+- **Pessimistic about tools**: compilers / toolchains
+
+
+tolerant of rewriting code
+    exploratory problem solving
+    not worried about future, just solve for the problem as currently defined (even if consciously truncated)
+    don’t speculate about future needs
+    if the requirements change, change the data/code
+    good writing is rewriting
 
 tolerant of some repetition
-tolerant of data in code
-    tolerant of code that resembles data: repetition that could be extracted out with macros or other abstractions
+tolerant of data in code / code that resembles data
+    repetition that could otherwise be extracted out with macros or other abstractions
+
+APIs != normal code
 
 
+
+3 Objects make it difficult to track which code accesses which data
 
 purported advantages:
 
