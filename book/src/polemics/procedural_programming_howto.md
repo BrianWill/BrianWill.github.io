@@ -2,10 +2,10 @@
 
 It's been about ten years since I published [my critiques of Object-Oriented Programming](./oop_is_bad.md), and I've since resisted revisting the topic until I have some new thoughts or or a useful reformulation of the argument. Well now I'm ready to beat the dead horse again, though only briefly and hopefully for the last time.
 
-What follows will be:
+My previous efforts perhaps didn't make the alternative to OOP totally clear, so what follows will be:
 
 1. A quick restatement of the problems with OOP.
-2. A high-level explanation of what I consider good ways to structure code and data, which for lack of a better term, we can call "procedural programming".
+2. A high-level explanation of what I consider good ways to structure code and data, which for lack of a better term, we'll call "procedural programming".
 
 ## OOP performance issues
 
@@ -21,11 +21,9 @@ One angle of critique I didn't actually cover in my original videos is the perfo
 > - **Virtual calls**: Not only do virtual dispatch tables incur overhead over regular function calls, virtual calls cannot normally be inlined (though some JIT compilers may do so at runtime)
 > - **One-at-a-time processing**: Because the code which directly manipulates an object is part of the object itself, there’s a natural tendency in OOP to process objects one-by-one rather than in large batches
 
----
-
 ## OOP structural issues
 
-The same appendix also discusses structural issues with OOP, but I'll try to reduce the argument here down to two key problems:
+The same appendix also discusses structural issues with OOP, but I'll try to reduce the argument here down to two main problems:
 
 ### 1) Overenthusiasm for fine-grained modularity
 
@@ -36,28 +34,96 @@ The underlying premise is that, the smaller a module, the easier a module can be
 > [!NOTE]
 > A related structural problem of OOP is 'conflation of data types with modules', the insistence that every data type be its own module and that all modules are data types. This conflation often leads to unnecessary fracturing of code and data across odd boundaries, *e.g.* relocating data from one object to another because it doesn't fit the supposed 'single responsibility' of the object.
 >
-> Arguably, though, this mistake is all just downstream of the OOP mania for fine-grained modularity. In origin, the thought process may have been: 1) some data types *do* make for naturally, self-contained modules, and 2) a program's data types are typically numerous and small enough to seem like plausible boundary lines for fine-grained modules. Hence, this conflation seemed like a good idea.
+> Arguably, though, this mistake is all just downstream of the OOP mania for fine-grained modularity. In origin, the thinking may have been that:
+>
+> - first, some data types *do* make for naturally self-contained modules
+> - second, a program's data types are typically numerous and small enough to seem like plausible boundary lines for fine-grained modules
+>
+> Hence, this conflation seemed like a good idea.
 
 ### 2) Aversion to sequential code and flat data
 
 The second major problem with object-oriented design is its strong tendency to result in ping-pong call graphs and tangles of cross-referenced data. These follow naturally from the excessive modularity: because the objects are small and self-contained, they can do little on their own and so tend to collect more-and-more direct and indirect references to other objects, and then to get anything done, the methods of an object must invoke the methods of other objects which must invoke the methods of other objects which must invoke the methods of other objects...
 
-As I'll argue in the rest of this article, over-complicating the shape of your code and data in this way&mdash;straying from simple, sequential code and simple, flat data&mdash;makes your program much harder to understand and often much more difficult to optimize.
+As I'll argue in the rest of this post, over-complicating the shape of your code and data in this way&mdash;straying from simple, sequential code and simple, flat data&mdash;makes your program much harder to understand and often much more difficult to optimize.
 
-## Data transformation
+## Data transformation pipelines
 
-translating problems that don’t seem like data transformation problems into data transformation
+The primary mental model in OOP is a graph of objects with potentially arbitrary connections. Summed up as a metaphor:
 
-data A → code → data B
+> ***An object-oriented program is a zoo of cooperating objects.***
 
-what’s example of something that doesn’t seem like a data transformation problem? graphics? game logic? simulation agent behaviour?    
+In contrast, the primary mental model in procedural programming is sequential data transformation:
 
-data pipeline model
-    data assembly line
-    clean macro > clean micro
-    an individual function is a mini-pipeline
-        macro-structure that most closely mirrors the one proven unit of code abstraction: the function
-    example of factorio bus assembly line
+> ***A procedural program is an assembly line that transforms data.***
+
+Data is loaded at one end of the assembly line, various stations along the line manipulate the data, and then the transformed data comes out the other end.
+
+![data transformation](./data_transformation.png)
+
+*Axiomatic truth*
+
+Not everything may *seem* like a data transformation problem, but everything computable ultimately must be so. In fact, programs can be broadly categorized by the primary kind of data transformation they perform:
+
+- **Processing jobs** (such as command line utils and compilers) transform arguments and file data, then save or print the results before terminating.
+- **Servers** transform network requests into network responses.
+- **Interactive applications** transform the application's state into new states based on user input events.
+- **Simulations** (such as games) transform the simulation's states into new states based on user input and time deltas.
+
+These four categories cover basically every program ever written, excepting arguably operating systems and embedded systems (which both can be broadly said to transform data into control of physical devices).
+
+In principle then, writing correct programs is just a matter of correctly transforming data! So writing any program should be easy, right? Well, the most obvious problem is that some data transformations are very, very complicated, but this is where the assembly line model pays off:
+
+> **If the correct data is fed into the assembly line but the wrong thing comes out the other end, you can simply bisect the sequence to figure out where it goes wrong.**
+
+The model is recursively decomposable: if stages A, B, and C produce correct results but stage D does not, you know the problem lies somewhere in D and can drill down into the substages of D in the exact same way.
+
+In contrast, a zoo of cooperating objects is not designed to be reasoned about sequentially: 
+
+1. Objects have responsibilities and relationships which in theory add up to correct programs.
+2. If the program fails, perhaps an object is failing to fulfill its responsibilities correctly, or perhaps the responsibilities and relationships need to be redesigned: maybe a method should be added, or moved, or whole new objects created, *etc.*.
+3. How the objects coordinate is not modeled as a sequence: object graphs are deliberately freeform.
+4. Sequential flows may be easy to trace in some simpler object graphs, but only incidentally. As graphs accrue more objects, simple code paths typically get scrambled because object-oriented design does not prioritize sequential reasoning.
+
+To be sure, not everything is perfect on the assembly line either.
+
+factorio bus
+assembly line
+
+
+
+
+
+
+
+
+- in interactive programs and simulations, the application or simulation state may not fully or correctly model all of the desired states. (Transitory states can be especially tricky to get right)
+- in interactive programs and simulations, the data transformation may seem correct for handling individual events but then break upon certain unusual sequences of input; in other words, everything within the logic of the frame may seem fine, but then the logic may be broken for what happens between frames
+
+
+
+clean macro > clean micro
+
+
+an individual function is a mini-pipeline
+    macro-structure that most closely mirrors the one proven unit of code abstraction: the function
+
+
+
+
+
+game loop
+    compilcation: 
+        complex state carried from tick-to-tick
+
+UI events
+    complication:
+        anticipate all possible event sequences
+            particularly troublesome for long-running, async event handlers
+
+servers
+    compilication:
+        overlapping requests
 
 
 data pipeline spaghetti
@@ -105,7 +171,6 @@ good usually = simple
     maybe not always simplest option, but generally simple
 
 flat, minimize hierarchy and graphs
-    example of factorio bus assembly line
 
 reference into structures by index/keys rather than address
 
