@@ -1,6 +1,6 @@
 # Procedural Programming HOWTO
 
-It's been about ten years since I published my [critiques of Object-Oriented Programming](./oop_is_bad.md), and I've since resisted revisting the topic until I have some new thoughts or or a useful reformulation of the argument. Well now I'm ready to beat the dead horse again, though only briefly and hopefully for the last time.
+It's been about ten years since I published some [critiques of Object-Oriented Programming](./oop_is_bad.md), and I've since resisted revisting the topic until I have some new thoughts or or a useful reformulation of the argument. Well now I'm ready to beat the dead horse again, though only briefly and hopefully for the last time.
 
 My previous efforts perhaps didn't make the alternative to OOP totally clear, so what follows will be:
 
@@ -27,7 +27,7 @@ The same appendix also discusses structural issues with OOP, but I'll try to red
 
 ### 1) Overenthusiasm for fine-grained modularity
 
-Dividing large systems into encapsulated modules is a perfectly good idea and perhaps even essential at a certain scale, but OOP takes the idea way too far: 'If modules are good, then maybe everything should be a module, and maybe more modules are always better?'
+Dividing large systems into encapsulated modules is a perfectly good idea and perhaps even essential at a certain scale, but OOP takes the idea way too far, *i.e.* 'If modules are good, then maybe everything should be a module, and maybe more modules are always better!'
 
 The underlying premise is that, the smaller a module, the easier a module can be made correct. In itself, this is totally true. The mistake is forgetting that the correctness of the whole system resides in how the modules interrelate, not just the correctness of the individual modules. By forgetting this, OOP often ends up replacing concentrated complexity with scattered complexity&mdash;which is generally more difficult to reason about&mdash;and thus ends up increasing overall complexity.
 
@@ -36,10 +36,10 @@ The underlying premise is that, the smaller a module, the easier a module can be
 >
 > Arguably, though, this mistake is all just downstream of the OOP mania for fine-grained modularity. In origin, the thinking was probably something like:
 >
-> 1. some data types *do* make for naturally self-contained modules
+> 1. some data types *do* make for naturally self-contained modules (such as ADTs)
 > 1. a program's data types are typically numerous and small enough to seem like plausible boundary lines for fine-grained modules
 >
-> Hence, the conflation may have seemed like a good idea.
+> Hence, the conflation may have seemed like a plausible idea in the 1970s.
 
 ### 2) Aversion to sequential code and flat data
 
@@ -61,22 +61,22 @@ Data is loaded at one end of the assembly line, various stations along the line 
 
 ![data transformation](./data_transformation.png)
 
-*Axiomatic truth*
+*[An axiomatic truth](https://www.youtube.com/watch?v=rX0ItVEVjHc)*
 
-Not everything may *seem* like a data transformation problem, but if it's computable, it is. In fact, programs can be broadly categorized by the primary kind of data transformation they perform:
+Not everything may *seem* like a data transformation problem, but if it's computable, it is just that. In fact, programs can be broadly categorized by the primary kind of data transformation they perform:
 
 - **Processing jobs** (such as command line utils and compilers) transform arguments and file data, then save or print the results before terminating.
 - **Servers** transform network requests into network responses.
 - **Interactive applications** transform the application's state into new states based on user input events.
 - **Simulations** (such as games) transform the simulation's states into new states based on user input and clock ticks.
 
-These four categories cover basically every program ever written, excepting arguably operating systems and embedded systems (which both can be broadly said to transform data into control of physical devices).
+These four categories cover basically every program ever written (excepting arguably operating systems and embedded systems, which both can be broadly said to transform data into control of physical devices).
 
 In principle then, writing correct programs is just a matter of correctly transforming data! So writing any program should be easy, right? Well, some data transformations are very, very complicated, but this is where the assembly line model pays off:
 
 > **If the correct data is fed into the assembly line but the wrong thing comes out the other end, you can simply bisect the sequence to figure out where it goes wrong.**
 
-The model is recursively decomposable: if stages A, B, and C produce correct results but stage D does not, you know the problem lies somewhere in D and can bisect the substages of D in the exact same way.
+This works recursively: if stages A, B, and C produce correct results but stage D does not, you know the problem lies somewhere in D and can bisect the substages of D in the exact same way.
 
 In contrast, a zoo of cooperating objects is not designed to be reasoned about sequentially: 
 
@@ -85,29 +85,31 @@ In contrast, a zoo of cooperating objects is not designed to be reasoned about s
 3. How the objects coordinate is not modeled as a sequence: object graphs are deliberately freeform.
 4. Sequential flows may be easy to trace in some simpler object graphs, but only incidentally. As graphs accrue more objects, simple code paths typically get scrambled because object-oriented design does not prioritize sequential reasoning.
 
-To be fair, even though sequential data pipelines are inherently easier to reason about, they are not immune to overcomplication. This happens in three ways:
+To be fair, even though sequential data pipelines are inherently easier to reason about, they are not immune to their own overcomplications. In particular, data pipelines may suffer from:
 
-1. bad data design
-1. bad code decomposition
-1. bad handling of mutable state
+1. Scattered access of mutable state
+1. Functions that access too much external state
+1. Unnecessarily complex data
 
-We'll address these in reverse order.
+## Scattered access of mutable state
 
-## Handling mutable state 
+Shared state infamously complicates multi-threading, but it also can over-complicate single-threaded code if wrecklessly scattered through the code. Say a piece of data comes out wrong at the end of your data pipline. Where did it go wrong? Well the more substages in the pipeline where the data gets potentailly mutated, the harder you'll have to look and the harder you'll typically have to reason about the fix.
 
-Shared state infamously complicates multi-threading, but it also can over-complicate single-threaded code if not handled with care. Very simply, imagine a piece of data comes out wrong at the end of your data pipline. Where did it go wrong? Well the more substages in the pipeline where the data gets potentailly mutated, the harder you'll have to look and the harder you'll typically have to reason about the fix.
+If you flip the perspective and think first about data before code, the fewer places in code where a piece of data gets potentailly mutated, generally the much easier it is to understand that data and what purpose it serves. In fact, pervasively mutating a piece of data througout the pipeline sneakily embues it with multiple stealth purposes that shift from stage to stage.
 
-Moreover, if you flip the perspective and think first about data before code, the fewer places in code where a piece of data gets potentailly mutated, generally the much easier it is to understand that data and what purpose it serves. In fact, pervasively mutating a piece of data througout the pipeline sneakily embues it with multiple stealth purposes that shift from stage to stage.
+How can this be combated? Well in ideal cases, you can consolidate mutations of a particular piece of data into just one or a few part of the pipeline. Often all this takes is just a bit of reordering the logic.
 
-How can this be combated? Well in ideal cases, you can consolidate mutations of a particular piece of data into just one part of the pipeline. Sometimes all this takes is just a bit of reordering the logic.
+When this isn't possible, a fallback option in some cases is to create transient copies rather than mutate the original. This isn't really a simplification, *per se*, but it can make the code more honest: what before was just called 'foo' at all stages of the pipeline even though its purpose changes stage-to-stage, now its role is filled in parts by transient copy 'foo prime', which better signals intent to readers. What was presented as *one* thing in the pipeline is more truthfully presented as multiple related things. Even though you now have another named thing to think about, the explicit distinction still provides better clarity.
 
-When this isn't possible, a fallback option in some places is to create transient copies rather than mutate the original. This isn't really a simplification, *per se*, but it can make the code more honest: what before was just called 'foo' at all stages of the pipeline even though its purpose changes stage-to-stage, now its role is filled in parts by transient copy 'foo prime', which better signals intent to readers. What was presented as *one* thing in the pipeline is more truthfully presented as multiple related things. Though you now have another named thing to think about, the explicit distinction still provides better clarity.
+### Functions that access too much external state
 
-### Code decomposition
+When functions access external state, they are not self-contained and thus can be much harder to reason about.
 
-My most important prescription about code decomposition actually relates to state management.
+If all the external state accessed by a function were declared at the top of the function, this would at least notify the programmer , but even better if the function simply accesses less external state to begin with or even none at all.
 
-Consciously delineate functions based on what categories of external state they access, directly or indirectly. Take stock of whether each function:
+
+
+The correct mindset is to consciously delineate functions based on what categories of external state they access, directly or indirectly. Take stock of whether each function:
 
 - reads globals
 - writes globals
@@ -118,39 +120,39 @@ Consciously delineate functions based on what categories of external state they 
 Then for each case, examine whether it's really necessary:
 
 - Does this function really need to read a global? Maybe it can instead be passed a transient copy.
-- Does this function really need to write to a file? Maybe the function can write the data to memory and leave it up to later code to eventually write it out to a file.
-- Does this function really need to mutate the data passed to it by reference? Maybe it can instead return its results as separate value.
+- Does this function really need to write to a file? Maybe the function can write the data to memory and leave it up to later code to eventually write out to a file.
+- Does this function really need to mutate the data passed to it by reference? Maybe it can instead return its results as a new, separate value.
 
-Much like the general strategy of consolidating the mutations for a piece of data, the goal is to not eliminate these things but rather concentrate them into fewer points of the pipeline. Full functional purity is a big ask with downsides of its own, but you win a lot aiming for the next step down:
+Much like the general strategy of consolidating state mutations, the goal is to not eliminate these things but rather concentrate them into fewer points of the pipeline. Full functional purity is a big ask with downsides of its own, but you win a lot just aiming for the next step down:
 
-> - **Functions should only access data that is explicitly passed to them.** No function should read or write globals.
-> - **Functions should only be passed data that they actually need.** Large collections and structs should not be passed when individual items or fields will suffice.
-> - **Core logic should not be mixed with I/O.** Functions that do core logic should not do I/O, and functions that do I/O should not do non-trivial logic.
-
-> [!NOTE]
-> Annoyingly, there seems to be no established term for a function that may mutate its arguments but which is otherwise pure. I'd like to coin something, but there aren't any obvious candidates. "Semi-pure"? Gemini suggested "transluscent" (as in 'referentially transparent').
+- **Functions should only access data that is explicitly passed to them.** No function should read or write globals.
+- **Functions should only be passed data that they actually need.** Large collections and structs should not be passed when individual items or fields will suffice.
+- **Core logic should not be mixed with I/O.** Functions that do core logic should not do I/O, and functions that do I/O should not do non-trivial logic.
 
 > [!NOTE]
 > Loggers and allocators are technically stateful, but generally not in ways that can break the logic of your program. Hence they're OK to access as globals.
 
-## Data design
+Annoyingly, there doesn't seem to be an established term for functions that may mutate their arguments but which are not otherwise pure. I'd try to coin something, but there aren't any obvious candidates. "Semi-pure"? "Quasi-pure"? Gemini suggests "transluscent" (as in 'referentially transparent'). Whatever you want to call it, the idea is simple: just try to minimize the scope of external state accessed by each function.
 
-spectrum of persistent data to transitory data
-    at very least, don’t store transitory state in globals
-    pass minimal set of global state up the chain
-        similar to argument about exceptions: hassle of returning errors up full chain
+## Unnecessarily complex data
 
-clean data > clean code
+The best data designs are usual simple (if not neccessarily the *simplest*). When data is more complex than it needs to be:
 
-good usually = simple
-    maybe not always simplest option, but generally simple
+- The purpose of the data elements become harder to understand.
+- The program becomes harder to change.
+- State mutation becomes more difficult to consolidate within the pipeline.
 
-flat, minimize hierarchy and graphs
+To this last point, consider if instances of data type A reference instances of data type B: any access of A then implies access of B, and so consolidating state mutation of B requires also minding access of A. Conversely, if the linkage can be removed, managing and optimizing both A and B independently becomes easier. Sometimes, of course, you need such linkages&mdash;but often you don't!
 
-reference into structures by index/keys rather than address
+A key sin of object-oriented thinking is that it encourages you to design your data around your code, and so the data tyically ends up with many unnecessary such relationships, fractures, and redundancies. In procedural programming, you have the freedom to question your data design on its own terms before even thinking about code, *e.g.*:
 
-avoid redundancies
-    consider the minimal, most compact encoding of the information
+- Is this the most minimal, compact encoding of the required information? If not, do we have good reason to denormalize?
+- Are these linkages necessary? If so, can the linkages be represented by keys or indexes instead of pointers?
+- Does this data need to be stored at all, or can it just be inferred or recomputed as needed?
+- Can these hierarchies or graphs be flattened into arrays?
+
+
+
 
 
 
@@ -203,7 +205,6 @@ data pipeline spaghetti
 ## Sequences > hierarchies > graphs
 
 common theme about both code design and data design
-
 
 sometimes you do need hierarchies and graphs
     e.g. hierarchical data and distributed systems
