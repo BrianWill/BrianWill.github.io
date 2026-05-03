@@ -53,9 +53,13 @@ The primary mental model in OOP is a graph of objects with potentially arbitrary
 
 > ***An object-oriented program is a zoo of cooperating objects.***
 
+![oop zoo](./object_zoo.webp)
+
 In contrast, the primary mental model in procedural programming is sequential data transformation:
 
 > ***A procedural program is an assembly line that transforms data.***
+
+![assembly line](./factoria_bus.jpg)
 
 Data is loaded at one end of the assembly line, various stations along the line manipulate the data, and then the transformed data comes out the other end.
 
@@ -63,12 +67,12 @@ Data is loaded at one end of the assembly line, various stations along the line 
 
 *[An axiomatic truth](https://www.youtube.com/watch?v=rX0ItVEVjHc)*
 
-Not everything may *seem* like a data transformation problem, but if it's computable, it is just that. In fact, programs can be broadly categorized by the primary kind of data transformation they perform:
+Not everything may *seem* like a data transformation problem, but if something is computable, it is ultimately just that. In fact, programs can be broadly categorized by the primary kind of data transformation they perform:
 
-- **Processing jobs** (such as command line utils and compilers) transform arguments and file data, then save or print the results before terminating.
 - **Servers** transform network requests into network responses.
 - **Interactive applications** transform the application's state into new states based on user input events.
 - **Simulations** (such as games) transform the simulation's states into new states based on user input and clock ticks.
+- **Processing jobs** (such as command line utils and compilers) transform arguments and file data into some result, then save or print the result before terminating.
 
 These four categories cover basically every program ever written (excepting arguably operating systems and embedded systems, which both can be broadly said to transform data into control of physical devices).
 
@@ -144,7 +148,7 @@ The best data designs are usual simple (if not neccessarily the *simplest*). Whe
 
 To this last point, consider if instances of data type A reference instances of data type B: any access of A then implies access of B, and so consolidating state mutation of B requires also minding access of A. Conversely, if the linkage can be removed, managing and optimizing both A and B independently becomes easier. Sometimes, of course, you need such linkages&mdash;but often you don't!
 
-A key sin of object-oriented thinking is that it encourages you to design your data around your code, and so the data tyically ends up with many unnecessary such relationships, fractures, and redundancies. In procedural programming, you have the freedom to question your data design on its own terms before even thinking about code, *e.g.*:
+A key sin of object-oriented thinking is that it encourages you to design your data around your code, and so the data tyically ends up with many such unnecessary relationships, fractures, and redundancies. In procedural programming, you have the freedom to question your data design on its own terms before even thinking about code, *e.g.*:
 
 - Is this the most minimal, compact encoding of the required information? If not, do we have good reason to denormalize?
 - Are these linkages necessary? If so, can the linkages be represented by keys or indexes instead of pointers?
@@ -153,137 +157,15 @@ A key sin of object-oriented thinking is that it encourages you to design your d
 
 
 
+## Context confusion
 
+Unfortunately, one more thing prevents the data pipeline model from making all computable problems entirely simple and easy to solve: the *context*. While a pipeline is the most tractable way to reason about the relationships of all the data and code within the pipeline, there still remains the relationship of the pipeline to the outside world.
 
+As established earlier, servers are basically request processing pipelines, interactive applications are event processing piplines, and games are user input processing pipelines; in principle then, as long as the core pipelines of these programs transform the program state correctly for every possible request, event, or user input, then the programs will work correctly. However, this is often easier said then done because:
 
-## Pipeline context
+1. The pipeline must robustly anticipate all possible sequences of requests, events, and user input.
+2. Some request, event, or input sequences may require the program to store complex transitory states.
 
+For example, in a user application, when events trigger longer-running async tasks, this may necessitate blocking some but not all user interactions until the task is complete. For another example, in a game, a scripted sequence that plays out over many frames must often account for many possible user actions while the sequence plays out and other facets of world state. The logic for these cases cannot be contained within any single run of an application's pipeline (the event handlers) or a game's pipeline (the tick update), and so they often require complex state representation and careful thinking.
 
-- in interactive programs and simulations, the application or simulation state may not fully or correctly model all of the desired states. (Transitory states can be especially tricky to get right)
-- in interactive programs and simulations, the data transformation may seem correct for handling individual events but then break upon certain unusual sequences of input; in other words, everything within the logic of the frame may seem fine, but then the logic may be broken for what happens between frames
-
-
-
-an individual function is a mini-pipeline
-    macro-structure that most closely mirrors the one proven unit of code abstraction: the function
-
-
-
-
-
-game loop
-    compilcation: 
-        complex state carried from tick-to-tick
-
-UI events
-    complication:
-        anticipate all possible event sequences
-            particularly troublesome for long-running, async event handlers
-
-servers
-    compilication:
-        overlapping requests
-
-
-data pipeline spaghetti
-    still have to worry about sequencing of how the pipeline is fed:
-        event sequences
-        logic over multiple frames in game loop
-            cannot be captured by the pipeline that defines the frame
-
-
-
-
-
-
-
-
-## Good data design
-
-
-
-## Sequences > hierarchies > graphs
-
-common theme about both code design and data design
-
-sometimes you do need hierarchies and graphs
-    e.g. hierarchical data and distributed systems
-    ...but avoid them when you can
-        e.g. do you want to have to think about complex type hierarchies AND runtime object graph AND deep call stacks?
-            classic Java style imposes this kind of burden
-
-    ... when you do have hierarchies and graphs, try to keep them simple
-        e.g. keep call stack shallow
-
-
-
-
-
-
-factorio bus
-assembly line
-
-
-
-
-# DISCARD
-
-
-
-## Procedural mindset
-
-- **Pessimistic about fine-grained modularization**:
-- **Pessimistic about code reuse and abstractions**: solve just your specific, immediate problem rather than speculate about your future problems
-- **Pessimistic about dependencies**:
-- **Pessimistic about tools**: compilers / toolchains
-
-
-tolerant of rewriting code
-    exploratory problem solving
-    not worried about future, just solve for the problem as currently defined (even if consciously truncated)
-    don’t speculate about future needs
-    if the requirements change, change the data/code
-    good writing is rewriting
-
-tolerant of some repetition
-tolerant of data in code / code that resembles data
-    repetition that could otherwise be extracted out with macros or other abstractions
-
-APIs != normal code
-
-
-
-3 Objects make it difficult to track which code accesses which data
-
-purported advantages:
-
-The theoretical benefits of OOP include:
-— Composability: Programs made out of objects can be incrementally assembled and
-modified
-— Reconfigurability: Features can be easily added, removed, and modified by inserting,
-removing, and replacing objects
-— Code reuse: Objects can be easily reused between programs.
-— Intuitiveness: Real-world things and processes naturally correspond to objects.
-— Abstraction: Objects allow the programmer to solve problems at a high-level without
-being distracted by low-level details
-
-
-
-
-
-- throw exceptions
-- no i/o
-- no alloc
-- no sync
-- no coloring (async or otherwise)
-- no exceptions
-- no returned errors? (ideally keep failure paths out of core logic...but not always possible; keeping IO out of core logic paths already removes a big chunk of likely failure paths from most code)
-
-
-
-And for methods:
-
-- reads field members
-- write field members
-
-(Field members are basically smaller scope globals.)
+Exacerbating the difficulty of these cases is the fact that testing and debugging code across multiple events or multiple game ticks is generally much less straightforward than testing or debugging within a single event handler or a single game tick. An ordinary step debugger is not sufficient: debugging such cases properly requires the ability to record and playback events and input. (Sadly this capability is not commonly available in widely used application frameworks and game engines.)
