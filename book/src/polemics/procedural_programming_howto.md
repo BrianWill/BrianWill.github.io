@@ -109,11 +109,7 @@ When this isn't possible, a fallback option in some cases is to create transient
 
 When functions access external state, they are not self-contained and thus can be much harder to reason about.
 
-If all the external state accessed by a function were declared at the top of the function, this would at least notify the programmer , but even better if the function simply accesses less external state to begin with or even none at all.
-
-
-
-The correct mindset is to consciously delineate functions based on what categories of external state they access, directly or indirectly. Take stock of whether each function:
+The correct mindset, then, is to consciously delineate functions based on what categories of external state they access, directly or indirectly. For each function, take stock of whether it:
 
 - reads globals
 - writes globals
