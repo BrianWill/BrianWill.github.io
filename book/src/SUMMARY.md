@@ -44,6 +44,7 @@
 # Polemics
 
 - [Object-Oriented Programming is Bad](./polemics/oop_is_bad.md)
+- [Procedural Programming HOWTO](./polemics/procedural_programming_howto.md)
 
 ---
 
