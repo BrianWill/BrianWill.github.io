@@ -125,9 +125,9 @@ Then for each case, examine whether it's really necessary:
 
 Much like the general strategy of consolidating state mutations, the goal is to not eliminate these things but rather concentrate them into fewer points of the pipeline. Full functional purity is a big ask with downsides of its own, but you win a lot just aiming for the next step down:
 
-- **Functions should only access data that is explicitly passed to them.** No function should read or write globals.
-- **Functions should only be passed data that they actually need.** Large collections and structs should not be passed when individual items or fields will suffice.
-- **Core logic should not be mixed with I/O.** Functions that do core logic should not do I/O, and functions that do I/O should not do non-trivial logic.
+- **Functions should only access data that is explicitly passed to them.** *I.e.*, no function should read or write globals.
+- **Functions should only be passed data that they actually need.** *I.e.*, large collections and structs should not be passed when individual items or fields will suffice.
+- **Core logic should not be mixed with I/O.** *I.e.*, functions that do core logic should not do I/O, and functions that do I/O should not do non-trivial logic.
 
 > [!NOTE]
 > Loggers and allocators are technically stateful, but generally not in ways that can break the logic of your program. Hence they're OK to access as globals.
